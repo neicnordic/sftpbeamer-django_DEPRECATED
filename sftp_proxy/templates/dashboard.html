@@ -2,8 +2,87 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% load staticfiles %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+    <link rel="stylesheet" href="{% static 'font-awesome/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dataTables.bootstrap.css' %}">
+
+
+    <script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dataTables.bootstrap.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
 </head>
 <body>
-
+    <div class="panel panel-default container-fluid">
+        <div class="panel-body row">
+            <div class="panel panel-info col-md-6 tsd">
+                <div class="panel-heading">
+                    <h4 class="panel-title text-center">TSD Panel</h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-inline login-form tsd-form">
+                        <div class="form-group">
+                            <label class="sr-only" for="tsd-username">User Name</label>
+                            <input type="text" class="form-control" id="tsd-username" placeholder="User Name">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="tsd-password">Password</label>
+                            <input type="password" class="form-control" id="tsd-password" placeholder="Password">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="tsd-otc">One-time Code</label>
+                            <input type="text" class="form-control" id="tsd-otc" placeholder="One-time Code">
+                        </div>
+                        <input type="submit" class="btn btn-primary" value="Connect">
+                    </form>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" id="tsd-path"></div>
+                        <div id="tsd-table-div"></div>
+                    </div>
+                </div>
+                <div class="panel-footer text-right">
+                    <button type="button" class="btn btn-primary" id="tsd-transfer-btn">Transfer</button>
+                </div>
+            </div>
+            <div class="panel panel-info col-md-6 mosler">
+                <div class="panel-heading">
+                    <h4 class="panel-title text-center">Mosler Panel</h4>
+                </div>
+                <div class="panel-body">
+                    <form class="form-inline login-form mosler-form">
+                        <div class="form-group">
+                            <label class="sr-only" for="mosler-username">User Name</label>
+                            <input type="text" class="form-control" id="mosler-username" placeholder="User Name">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="mosler-password">Password</label>
+                            <input type="password" class="form-control" id="mosler-password" placeholder="Password">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" for="mosler-otc">One-time Code</label>
+                            <input type="text" class="form-control" id="mosler-otc" placeholder="One-time Code">
+                        </div>
+                        <input type="submit" class="btn btn-primary" value="Connect">
+                    </form>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" id="mosler-path"></div>
+                        <div id="mosler-table-div"></div>
+                    </div>
+                </div>
+                <div class="panel-footer text-right">
+                    <button type="button" class="btn btn-primary" id="mosler-transfer-btn">Transfer</button>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer"></div>
+    </div>
 </body>
 </html>
