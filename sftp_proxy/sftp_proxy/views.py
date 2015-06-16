@@ -60,25 +60,22 @@ class ListContentView(View):
             source = request.GET["source"]
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             data_list = []
+
             if source == 'tsd':
                 sftp_client = sftp.TSD_CONNECTIONS[session_key]
-                sftp_client.chdir(path)
-                content = sftp_client.listdir_iter()
-                for file_attr in content:
-                    if stat.S_ISDIR(file_attr.st_mode):
-                        data_list.append([file_attr.filename, file_attr.st_size, "folder"])
-                    else:
-                        data_list.append([file_attr.filename, file_attr.st_size, "file"])
-
-            if source == 'mosler':
+            elif source == 'mosler':
                 sftp_client = sftp.MOSLER_CONNECTIONS[session_key]
-                sftp_client.chdir(path)
-                content = sftp_client.listdir_iter()
-                for file_attr in content:
-                    if stat.S_ISDIR(file_attr.st_mode):
-                        data_list.append([file_attr.filename, file_attr.st_size, "folder"])
-                    else:
-                        data_list.append([file_attr.filename, file_attr.st_size, "file"])
+            else:
+                # Some exception
+                return HttpResponseBadRequest()
+
+            sftp_client.chdir(path)
+            content = sftp_client.listdir_iter()
+            for file_attr in content:
+                if stat.S_ISDIR(file_attr.st_mode):
+                    data_list.append([file_attr.filename, file_attr.st_size, "folder"])
+                else:
+                    data_list.append([file_attr.filename, file_attr.st_size, "file"])
 
             context = {"data": data_list, "path": path}
             return JsonResponse(context)
