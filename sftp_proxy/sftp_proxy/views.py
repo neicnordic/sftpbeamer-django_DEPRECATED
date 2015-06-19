@@ -85,6 +85,13 @@ class ListContentView(View):
 class TransferView(View):
 
     def post(self, request):
+        """
+        The json structure received by this method is {"from" : {"path" : "the absolute path
+        from which the transferred files come", "name" : "tsd or mosler",
+        "data" : [{"name" : "file name or folder name", "type" : "file or folder"},
+        {"name" : "file name or folder name", "type" : "file or folder"}]},
+        "to" : {"path" : "the absolute path into which the transferred files will be put", "name" : "tsd or mosler"}}
+        """
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             request_data = json.loads(request.body.decode('utf-8'))
@@ -98,6 +105,8 @@ class TransferView(View):
                 if item['type'] == 'file':
                     sftp_client_from.getfo(from_path + '/' + item['name'],
                                            sftp_client_to.open(to_path + '/' + item['name'], 'w'))
+                else:
+                    sftp.transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
 
             return JsonResponse({"status": "success"})
         else:

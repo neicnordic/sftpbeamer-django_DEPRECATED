@@ -22,15 +22,11 @@ $(document).ready(function() {
     var tsd_table;
 
     $("#tsd-table-div").on('click', 'tbody>tr', function () {
-        if ($(this).find('.tsd-folder-link').length == 0) {
-            $(this).toggleClass('selected');
-        }
+        $(this).toggleClass('selected');
     });
 
     $("#mosler-table-div").on('click', 'tbody>tr', function () {
-        if ($(this).find('.mosler-folder-link').length == 0) {
-            $(this).toggleClass('selected');
-        }
+        $(this).toggleClass('selected');
     });
 
     $(".tsd-form").submit(function(event) {
@@ -143,7 +139,11 @@ $(document).ready(function() {
                 "render": function (data, type, full, meta) {
                     var isFoler = full[2];
                     if (isFoler == "folder") {
-                        return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=tsd">' + data + '</a>';
+                        if (path == "/") {
+                            return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=tsd">' + data + '</a>';
+                        } else {
+                            return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=tsd">' + data + '</a>';
+                        }
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;
                     }
@@ -246,7 +246,11 @@ $(document).ready(function() {
                 "render": function (data, type, full, meta) {
                     var isFoler = full[2];
                     if (isFoler == "folder") {
-                        return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=mosler">' + data + '</a>';
+                        if (path == "/") {
+                            return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=mosler">' + data + '</a>';
+                        } else {
+                            return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=mosler">' + data + '</a>';
+                        }
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;
                     }
