@@ -173,6 +173,17 @@ $(document).ready(function() {
                     $("#mosler-path").append('<a class="mosler-path-link" href="/sftp_proxy/dashboard/list?path=/&source=mosler">/</a>');
                     $("#mosler-table-div").html('<table id="mosler-table" class="table table-striped"></table>');
                     mosler_table = $("#mosler-table").dataTable({
+                        "pagingType": "simple",
+                        "dom": "tlp",
+                        "language": {
+                            "paginate": {
+                                "next": "&gt;",
+                                "previous": "&lt;"
+                            }
+                        },
+                        "info": false,
+                        "searching": false,
+                        "lengthMenu": [[10, 25, 40, -1], [10, 25, 40, "All"]],
                         "data": returnedData["data"],
                         "columns": [{
                             "title": "Name",
@@ -240,6 +251,17 @@ $(document).ready(function() {
         $("#mosler-table").empty();
         $("#mosler-table-div").html('<table id="mosler-table" class="table table-striped"></table>');
         var settings = {
+            "pagingType": "simple",
+            "dom": "tlp",
+            "language": {
+                "paginate": {
+                    "next": "&gt;",
+                    "previous": "&lt;"
+                }
+            },
+            "info": false,
+            "searching": false,
+            "lengthMenu": [[10, 25, 40, -1], [10, 25, 40, "All"]],
             "data": updatedData,
             "columns": [{
                 "title": "Name",
@@ -299,6 +321,40 @@ $(document).ready(function() {
         });
     });
 
+    $('#mosler-delete-btn').click(function() {
+        var transferredData = [];
+
+        mosler_table.api().rows('.selected').data().each(function(item) {
+            transferredData.push({"name": item[0], "type": item[2]});
+        });
+
+        var path = extractPath($('.mosler-path-link:last').attr('href'));
+        var csrftoken = getCookie('csrftoken');
+
+        $.ajax({
+            type: "POST",
+            url: "/sftp_proxy/dashboard/delete",
+            data: JSON.stringify({"source": "mosler", "path": path, "data": transferredData}),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            beforeSend: function(xhr) {
+                if (!this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            },
+            success: function(returnedData) {
+                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=mosler";
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function(updatedData) {
+                        reloadMoslerTableData(updatedData["data"], updatedData["path"]);
+                    }
+                });
+            }
+        });
+    });
+
     $('#tsd-transfer-btn').click(function() {
         var transferredData = [];
 
@@ -328,6 +384,40 @@ $(document).ready(function() {
                     url: url,
                     success: function(updatedData) {
                         reloadMoslerTableData(updatedData["data"], updatedData["path"]);
+                    }
+                });
+            }
+        });
+    });
+
+    $('#tsd-delete-btn').click(function() {
+        var transferredData = [];
+
+        tsd_table.api().rows('.selected').data().each(function(item) {
+            transferredData.push({"name": item[0], "type": item[2]});
+        });
+
+        var path = extractPath($('.tsd-path-link:last').attr('href'));
+        var csrftoken = getCookie('csrftoken');
+
+        $.ajax({
+            type: "POST",
+            url: "/sftp_proxy/dashboard/delete",
+            data: JSON.stringify({"source": "tsd", "path": path, "data": transferredData}),
+            dataType: "json",
+            contentType: 'application/json; charset=utf-8',
+            beforeSend: function(xhr) {
+                if (!this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            },
+            success: function(returnedData) {
+                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=tsd";
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function(updatedData) {
+                        reloadTsdTableData(updatedData["data"], updatedData["path"]);
                     }
                 });
             }

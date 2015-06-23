@@ -1,4 +1,7 @@
-import stat,json
+import stat
+import json
+
+from os import sep
 
 from django.views.generic import View
 from django.shortcuts import render
@@ -103,11 +106,34 @@ class TransferView(View):
 
             for item in request_data['from']['data']:
                 if item['type'] == 'file':
-                    sftp_client_from.getfo(from_path + '/' + item['name'],
-                                           sftp_client_to.open(to_path + '/' + item['name'], 'w'))
+                    sftp_client_from.getfo(from_path + sep + item['name'],
+                                           sftp_client_to.open(to_path + sep + item['name'], 'w'))
                 else:
                     sftp.transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
 
+            return JsonResponse({"status": "success"})
+        else:
+            return HttpResponseNotAllowed()
+
+class DeleteView(View):
+
+    def post(self, request):
+        """
+        The json structure received by this method is {"source": "tsd or mosler", "path": "the parent path of the files
+        and folders to be deleted", "data": [{"name": "file name or folder name", "type": "file or folder"},
+        {"name": "file name or folder name", "type": "file or folder"}]}
+        """
+        if request.is_ajax():
+            session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
+            request_data = json.loads(request.body.decode('utf-8'))
+            sftp_client = sftp.get_sftp_client(request_data['source'], session_key)
+            path = request_data['path']
+
+            for item in request_data['data']:
+                if item['type'] == 'file':
+                    sftp_client.remove(path + sep + item['name'])
+                else:
+                    sftp.delete_folder(item['name'], path, sftp_client)
             return JsonResponse({"status": "success"})
         else:
             return HttpResponseNotAllowed()

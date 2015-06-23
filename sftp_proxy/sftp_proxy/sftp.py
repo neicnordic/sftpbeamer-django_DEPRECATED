@@ -71,3 +71,10 @@ def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_clie
             sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
                                    sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'))
 
+def delete_folder(folder_name, path, sftp_client):
+    for file_attr in sftp_client.listdir_attr(path + sep + folder_name):
+        if stat.S_ISDIR(file_attr.st_mode):
+            delete_folder(file_attr.filename, path + sep + folder_name, sftp_client)
+        else:
+            sftp_client.remove(path + sep + folder_name + sep + file_attr.filename)
+    sftp_client.rmdir(path + sep + folder_name)
