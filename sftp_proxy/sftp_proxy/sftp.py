@@ -55,15 +55,8 @@ def _create_host2_sftp_client(user_name, password, hostname, port):
     else:
         port = int(port)
     transport = Transport((hostname, port))
-    transport.connect(_get_host2_key(), user_name, password)
+    transport.connect(None, user_name, password)
     return transport.open_sftp_client()
-
-
-def _get_host2_key():
-    """The RSA key for the sftp server"""
-    key = 'AAAAB3NzaC1yc2EAAAADAQABAAABAQC36rThhzm4jeZFtXCbNhu/sArVRbDP50qhNJ5JsXB723UxXsE4g0/aOHcuezdIPl0KggHyRBX+gxFd3fkYmQW3ToBNEXlT/eWi3jL2L+4gqtAJI0pLiTNX/UmLxCoKjlAkWYIur+dqMDhcs73UE9vlG+zPCSZlJYxmrzWEKAJmhzUzb6Bjh0/npEUN1CaMylgRJ3dwQfRLTm4pmR4nl0CShgx2DOfntTJaQ7lVLngO7lhVSsj5V3qCWz4Y5Pay8QdPjz5Xf2gPbgVCsM2JuU7Lbkzc9pFZd5kzFQNM2Q20mUqiZBh9SeCioXDz17AOcYcBQhDW/kca8ncC3xb4Uhh7'
-    binary = base64.decodebytes(bytes(key, 'utf8'))
-    return RSAKey(data=binary)
 
 def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_client_to):
     sftp_client_to.chdir(to_path)
