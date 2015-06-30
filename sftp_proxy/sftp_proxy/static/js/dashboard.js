@@ -34,12 +34,14 @@ $(document).ready(function() {
         var user_name = $("#host1-username").val();
         var password = $("#host1-password").val();
         var otc = $("#host1-otc").val();
+        var hostname = $("#host1-hostname").val();
+        var port = $("#host1-port").val();
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/login",
-                data: {"username": user_name, "password": password, "otc": otc, "source": "host1"},
+                data: {"username": user_name, "password": password, "otc": otc, "hostname": hostname, "port", port, "source": "host1"},
                 success: function(returnedData) {
                     $("#host1-path").append('<a class="host1-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host1">/</a>');
                     $("#host1-table-div").html('<table id="host1-table" class="table table-striped"></table>');
@@ -163,12 +165,14 @@ $(document).ready(function() {
         var user_name = $("#host2-username").val();
         var password = $("#host2-password").val();
         var otc = $("#host2-otc").val();
+        var hostname = $("#host2-hostname").val();
+        var port = $("#host2-port").val();
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/login",
-                data: {"username": user_name, "password": password, "otc": otc, "source": "host2"},
+                data: {"username": user_name, "password": password, "otc": otc, "hostname": hostname, "port": port, "source": "host2"},
                 success: function(returnedData) {
                     $("#host2-path").append('<a class="host2-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host2">/</a>');
                     $("#host2-table-div").html('<table id="host2-table" class="table table-striped"></table>');

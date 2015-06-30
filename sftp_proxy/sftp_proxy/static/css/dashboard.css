@@ -9,4 +9,10 @@
 
 .btn-connect {
 	float: right;
+	margin-top: .4em;
+	margin-top: .4em;
+}
+
+.form-input {
+	margin: .4em .2em;
 }

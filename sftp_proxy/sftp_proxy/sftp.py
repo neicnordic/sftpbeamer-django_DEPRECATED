@@ -18,16 +18,20 @@ def get_sftp_client(source, session_key):
     elif source == 'host2':
         return HOST2_CONNECTIONS[session_key]
 
-def create_sftp_client(source, user_name, password, otc):
+def create_sftp_client(source, user_name, password, otc, hostname, port):
+    # TODO: Replace this check with a checkbox in the dashboard on whether to
+    #       concatenate password and one time key (otc)
     if source == 'host1':
-        return _create_host1_sftp_client(user_name, password, otc)
+        return _create_host1_sftp_client(user_name, password, otc, hostname, port)
     elif source == 'host2':
-        return _create_host2_sftp_client(user_name, password + otc)
+        return _create_host2_sftp_client(user_name, password + otc, hostname, port)
 
-def _create_host1_sftp_client(user_name, password, otc):
-    host = "tsd-fx01.tsd.usit.no"
-    port = 22
-    transport = Transport((host, port))
+def _create_host1_sftp_client(user_name, password, otc, hostname, port):
+    if hostname is None:
+        hostname = "tsd-fx01.tsd.usit.no"
+    if port is None:
+        port = 22
+    transport = Transport((hostname, port))
     transport.start_client()
 
     def sftp_auth_handler(title, instructions, prompt_list):
@@ -41,10 +45,12 @@ def _create_host1_sftp_client(user_name, password, otc):
     transport.auth_interactive(user_name, sftp_auth_handler)
     return transport.open_sftp_client()
 
-def _create_host2_sftp_client(user_name, password):
-    host = "mosler.bils.se"
-    port = 22
-    transport = Transport((host, port))
+def _create_host2_sftp_client(user_name, password, hostname, port):
+    if hostname is None:
+        hostname = "mosler.bils.se"
+    if port is None:
+        port = 22
+    transport = Transport((hostname, port))
     transport.connect(_get_host2_key(), user_name, password)
     return transport.open_sftp_client()
 
