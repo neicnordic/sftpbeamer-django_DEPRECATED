@@ -41,7 +41,7 @@ $(document).ready(function() {
         $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/login",
-                data: {"username": user_name, "password": password, "otc": otc, "hostname": hostname, "port", port, "source": "host1"},
+                data: {"username": user_name, "password": password, "otc": otc, "hostname": hostname, "port": port, "source": "host1"},
                 success: function(returnedData) {
                     $("#host1-path").append('<a class="host1-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host1">/</a>');
                     $("#host1-table-div").html('<table id="host1-table" class="table table-striped"></table>');
