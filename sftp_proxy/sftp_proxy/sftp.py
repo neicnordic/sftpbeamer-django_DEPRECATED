@@ -31,6 +31,8 @@ def _create_host1_sftp_client(user_name, password, otc, hostname, port):
         hostname = "tsd-fx01.tsd.usit.no"
     if port is None:
         port = 22
+    else:
+        port = int(port)
     transport = Transport((hostname, port))
     transport.start_client()
 
@@ -50,6 +52,8 @@ def _create_host2_sftp_client(user_name, password, hostname, port):
         hostname = "mosler.bils.se"
     if port is None:
         port = 22
+    else:
+        port = int(port)
     transport = Transport((hostname, port))
     transport.connect(_get_host2_key(), user_name, password)
     return transport.open_sftp_client()
