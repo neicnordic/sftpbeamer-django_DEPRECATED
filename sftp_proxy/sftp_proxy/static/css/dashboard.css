@@ -6,3 +6,7 @@
 .login-form {
     padding-bottom: 15px;
 }
+
+.btn-connect {
+	float: right;
+}
