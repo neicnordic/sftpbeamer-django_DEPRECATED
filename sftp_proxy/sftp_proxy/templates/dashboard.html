@@ -29,6 +29,7 @@
                 </div>
                 <div class="panel-body">
                     <form class="form-inline login-form host1-form">
+                        {% csrf_token %}
                         <div class="form-group">
                             <label class="sr-only" for="host1-username">User Name</label>
                             <input type="text" class="form-control form-input" id="host1-username" placeholder="User Name">
@@ -68,6 +69,7 @@
                 </div>
                 <div class="panel-body">
                     <form class="form-inline login-form host2-form">
+                        {% csrf_token %}
                         <div class="form-group">
                             <label class="sr-only" for="host2-username">User Name</label>
                             <input type="text" class="form-control form-input" id="host2-username" placeholder="User Name">
