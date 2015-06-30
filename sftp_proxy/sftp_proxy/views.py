@@ -37,11 +37,11 @@ class LoginView(View):
             password = request.POST['password']
             source = request.POST['source']
             sftp_client = sftp.create_sftp_client(source, user_name, password, otc)
-            if source == 'tsd':
-                sftp.TSD_CONNECTIONS[session_key] = sftp_client
+            if source == 'host1':
+                sftp.HOST1_CONNECTIONS[session_key] = sftp_client
 
-            if source == 'mosler':
-                sftp.MOSLER_CONNECTIONS[session_key] = sftp_client
+            if source == 'host2':
+                sftp.HOST2_CONNECTIONS[session_key] = sftp_client
 
             content = sftp_client.listdir_iter()
             data_list = []
@@ -64,10 +64,10 @@ class ListContentView(View):
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             data_list = []
 
-            if source == 'tsd':
-                sftp_client = sftp.TSD_CONNECTIONS[session_key]
-            elif source == 'mosler':
-                sftp_client = sftp.MOSLER_CONNECTIONS[session_key]
+            if source == 'host1':
+                sftp_client = sftp.HOST1_CONNECTIONS[session_key]
+            elif source == 'host2':
+                sftp_client = sftp.HOST2_CONNECTIONS[session_key]
             else:
                 # Some exception
                 return HttpResponseBadRequest()
@@ -90,10 +90,10 @@ class TransferView(View):
     def post(self, request):
         """
         The json structure received by this method is {"from" : {"path" : "the absolute path
-        from which the transferred files come", "name" : "tsd or mosler",
+        from which the transferred files come", "name" : "host1 or host2",
         "data" : [{"name" : "file name or folder name", "type" : "file or folder"},
         {"name" : "file name or folder name", "type" : "file or folder"}]},
-        "to" : {"path" : "the absolute path into which the transferred files will be put", "name" : "tsd or mosler"}}
+        "to" : {"path" : "the absolute path into which the transferred files will be put", "name" : "host1 or host2"}}
         """
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]

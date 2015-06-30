@@ -19,31 +19,31 @@ $(document).ready(function() {
     }
 
 
-    var tsd_table;
+    var host1_table;
 
-    $("#tsd-table-div").on('click', 'tbody>tr', function () {
+    $("#host1-table-div").on('click', 'tbody>tr', function () {
         $(this).toggleClass('selected');
     });
 
-    $("#mosler-table-div").on('click', 'tbody>tr', function () {
+    $("#host2-table-div").on('click', 'tbody>tr', function () {
         $(this).toggleClass('selected');
     });
 
-    $(".tsd-form").submit(function(event) {
+    $(".host1-form").submit(function(event) {
         event.preventDefault();
-        var user_name = $("#tsd-username").val();
-        var password = $("#tsd-password").val();
-        var otc = $("#tsd-otc").val();
+        var user_name = $("#host1-username").val();
+        var password = $("#host1-password").val();
+        var otc = $("#host1-otc").val();
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/login",
-                data: {"username": user_name, "password": password, "otc": otc, "source": "tsd"},
+                data: {"username": user_name, "password": password, "otc": otc, "source": "host1"},
                 success: function(returnedData) {
-                    $("#tsd-path").append('<a class="tsd-path-link" href="/sftp_proxy/dashboard/list?path=/&source=tsd">/</a>');
-                    $("#tsd-table-div").html('<table id="tsd-table" class="table table-striped"></table>');
-                    tsd_table = $("#tsd-table").dataTable({
+                    $("#host1-path").append('<a class="host1-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host1">/</a>');
+                    $("#host1-table-div").html('<table id="host1-table" class="table table-striped"></table>');
+                    host1_table = $("#host1-table").dataTable({
                         "pagingType": "simple",
                         "dom": "tlp",
                         "language": {
@@ -61,7 +61,7 @@ $(document).ready(function() {
                             "render": function(data, type, full, meta) {
                                 var isFoler = full[2];
                                 if (isFoler == "folder") {
-                                    return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=/' + data + '&source=tsd"> ' + data + '</a>';
+                                    return '<i class="fa fa-folder-o"></i> <a class="host1-folder-link" href="/sftp_proxy/dashboard/list?path=/' + data + '&source=host1"> ' + data + '</a>';
                                 } else {
                                     return '<i class="fa fa-file-o"></i> ' + data;
                                 }
@@ -83,7 +83,7 @@ $(document).ready(function() {
             });
     });
 
-    $(document).on('click', '.tsd-folder-link', function(event) {
+    $(document).on('click', '.host1-folder-link', function(event) {
         event.preventDefault();
         var href = $(this).attr('href');
         var folder_name = $(this).text();
@@ -92,13 +92,13 @@ $(document).ready(function() {
             url: href,
             success: function(returnedData) {
                 var path = returnedData["path"];
-                $("#tsd-path").append('<a class="tsd-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=tsd">' + folder_name + '/</a>');
-                reloadTsdTableData(returnedData["data"], path);
+                $("#host1-path").append('<a class="host1-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=host1">' + folder_name + '/</a>');
+                reloadHost1TableData(returnedData["data"], path);
             }
         });
     });
 
-    $(document).on('click', '.tsd-path-link', function(event) {
+    $(document).on('click', '.host1-path-link', function(event) {
         event.preventDefault();
         var href = $(this).attr('href');
 
@@ -107,20 +107,20 @@ $(document).ready(function() {
             url: href,
             success: function(returnedData) {
                 var path = returnedData["path"];
-                $(".tsd-path-link").each(function(){
+                $(".host1-path-link").each(function(){
                     if (extractPath($(this).attr('href')).length > path.length) {
                         $(this).remove();
                     }
                 });
-                reloadTsdTableData(returnedData["data"], path);
+                reloadHost1TableData(returnedData["data"], path);
             }
         });
     });
 
-    function reloadTsdTableData(updatedData, path) {
-        tsd_table.api().destroy();
-        $("#tsd-table").empty();
-        $("#tsd-table-div").html('<table id="tsd-table" class="table table-striped"></table>');
+    function reloadHost1TableData(updatedData, path) {
+        host1_table.api().destroy();
+        $("#host1-table").empty();
+        $("#host1-table-div").html('<table id="host1-table" class="table table-striped"></table>');
         var settings = {
             "pagingType": "simple",
             "dom": "tlp",
@@ -140,9 +140,9 @@ $(document).ready(function() {
                     var isFoler = full[2];
                     if (isFoler == "folder") {
                         if (path == "/") {
-                            return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=tsd">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="host1-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=host1">' + data + '</a>';
                         } else {
-                            return '<i class="fa fa-folder-o"></i> <a class="tsd-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=tsd">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="host1-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=host1">' + data + '</a>';
                         }
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;
@@ -154,25 +154,25 @@ $(document).ready(function() {
                 "visible": false
             }]
         };
-        tsd_table = $("#tsd-table").dataTable(settings);
+        host1_table = $("#host1-table").dataTable(settings);
     }
 
-    var mosler_table;
-    $(".mosler-form").submit(function(event) {
+    var host2_table;
+    $(".host2-form").submit(function(event) {
         event.preventDefault();
-        var user_name = $("#mosler-username").val();
-        var password = $("#mosler-password").val();
-        var otc = $("#mosler-otc").val();
+        var user_name = $("#host2-username").val();
+        var password = $("#host2-password").val();
+        var otc = $("#host2-otc").val();
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/login",
-                data: {"username": user_name, "password": password, "otc": otc, "source": "mosler"},
+                data: {"username": user_name, "password": password, "otc": otc, "source": "host2"},
                 success: function(returnedData) {
-                    $("#mosler-path").append('<a class="mosler-path-link" href="/sftp_proxy/dashboard/list?path=/&source=mosler">/</a>');
-                    $("#mosler-table-div").html('<table id="mosler-table" class="table table-striped"></table>');
-                    mosler_table = $("#mosler-table").dataTable({
+                    $("#host2-path").append('<a class="host2-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host2">/</a>');
+                    $("#host2-table-div").html('<table id="host2-table" class="table table-striped"></table>');
+                    host2_table = $("#host2-table").dataTable({
                         "pagingType": "simple",
                         "dom": "tlp",
                         "language": {
@@ -190,7 +190,7 @@ $(document).ready(function() {
                             "render": function(data, type, full, meta) {
                                 var isFoler = full[2];
                                 if (isFoler == "folder") {
-                                    return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=/' + data + '&source=mosler"> ' + data + '</a>';
+                                    return '<i class="fa fa-folder-o"></i> <a class="host2-folder-link" href="/sftp_proxy/dashboard/list?path=/' + data + '&source=host2"> ' + data + '</a>';
                                 } else {
                                     return '<i class="fa fa-file-o"></i> ' + data;
                                 }
@@ -212,7 +212,7 @@ $(document).ready(function() {
             });
     });
 
-    $(document).on('click', '.mosler-folder-link', function(event) {
+    $(document).on('click', '.host2-folder-link', function(event) {
         event.preventDefault();
         var href = $(this).attr('href');
         var folder_name = $(this).text();
@@ -221,13 +221,13 @@ $(document).ready(function() {
             url: href,
             success: function(returnedData) {
                 var path = returnedData["path"];
-                $("#mosler-path").append('<a class="mosler-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=mosler">' + folder_name + '/</a>');
-                reloadMoslerTableData(returnedData["data"], path);
+                $("#host2-path").append('<a class="host2-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=host2">' + folder_name + '/</a>');
+                reloadHost2TableData(returnedData["data"], path);
             }
         });
     });
 
-    $(document).on('click', '.mosler-path-link', function(event) {
+    $(document).on('click', '.host2-path-link', function(event) {
         event.preventDefault();
         var href = $(this).attr('href');
 
@@ -236,20 +236,20 @@ $(document).ready(function() {
             url: href,
             success: function(returnedData) {
                 var path = returnedData["path"];
-                $(".mosler-path-link").each(function(){
+                $(".host2-path-link").each(function(){
                     if (extractPath($(this).attr('href')).length > path.length) {
                         $(this).remove();
                     }
                 });
-                reloadMoslerTableData(returnedData["data"], path);
+                reloadHost2TableData(returnedData["data"], path);
             }
         });
     });
 
-    function reloadMoslerTableData(updatedData, path) {
-        mosler_table.api().destroy();
-        $("#mosler-table").empty();
-        $("#mosler-table-div").html('<table id="mosler-table" class="table table-striped"></table>');
+    function reloadHost2TableData(updatedData, path) {
+        host2_table.api().destroy();
+        $("#host2-table").empty();
+        $("#host2-table-div").html('<table id="host2-table" class="table table-striped"></table>');
         var settings = {
             "pagingType": "simple",
             "dom": "tlp",
@@ -269,9 +269,9 @@ $(document).ready(function() {
                     var isFoler = full[2];
                     if (isFoler == "folder") {
                         if (path == "/") {
-                            return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=mosler">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="host2-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=host2">' + data + '</a>';
                         } else {
-                            return '<i class="fa fa-folder-o"></i> <a class="mosler-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=mosler">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="host2-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=host2">' + data + '</a>';
                         }
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;
@@ -283,24 +283,24 @@ $(document).ready(function() {
                 "visible": false
             }]
         };
-        mosler_table = $("#mosler-table").dataTable(settings);
+        host2_table = $("#host2-table").dataTable(settings);
     }
 
-    $('#mosler-transfer-btn').click(function() {
+    $('#host2-transfer-btn').click(function() {
         var transferredData = [];
 
-        mosler_table.api().rows('.selected').data().each(function(item) {
+        host2_table.api().rows('.selected').data().each(function(item) {
             transferredData.push({"name": item[0], "type": item[2]});
         });
 
-        var from_path = extractPath($('.mosler-path-link:last').attr('href'));
-        var to_path = extractPath($('.tsd-path-link:last').attr('href'));
+        var from_path = extractPath($('.host2-path-link:last').attr('href'));
+        var to_path = extractPath($('.host1-path-link:last').attr('href'));
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
             type: "POST",
             url: "/sftp_proxy/dashboard/transfer",
-            data: JSON.stringify({"from": {"path": from_path, "name": "mosler", "data": transferredData}, "to": {"path": to_path, "name": "tsd"}}),
+            data: JSON.stringify({"from": {"path": from_path, "name": "host2", "data": transferredData}, "to": {"path": to_path, "name": "host1"}}),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             beforeSend: function(xhr) {
@@ -309,32 +309,32 @@ $(document).ready(function() {
                 }
             },
             success: function(returnedData) {
-                var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=tsd";
+                var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
                 $.ajax({
                     type: "GET",
                     url: url,
                     success: function(updatedData) {
-                        reloadTsdTableData(updatedData["data"], updatedData["path"]);
+                        reloadHost1TableData(updatedData["data"], updatedData["path"]);
                     }
                 });
             }
         });
     });
 
-    $('#mosler-delete-btn').click(function() {
+    $('#host2-delete-btn').click(function() {
         var transferredData = [];
 
-        mosler_table.api().rows('.selected').data().each(function(item) {
+        host2_table.api().rows('.selected').data().each(function(item) {
             transferredData.push({"name": item[0], "type": item[2]});
         });
 
-        var path = extractPath($('.mosler-path-link:last').attr('href'));
+        var path = extractPath($('.host2-path-link:last').attr('href'));
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
             type: "POST",
             url: "/sftp_proxy/dashboard/delete",
-            data: JSON.stringify({"source": "mosler", "path": path, "data": transferredData}),
+            data: JSON.stringify({"source": "host2", "path": path, "data": transferredData}),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             beforeSend: function(xhr) {
@@ -343,33 +343,33 @@ $(document).ready(function() {
                 }
             },
             success: function(returnedData) {
-                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=mosler";
+                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host2";
                 $.ajax({
                     type: "GET",
                     url: url,
                     success: function(updatedData) {
-                        reloadMoslerTableData(updatedData["data"], updatedData["path"]);
+                        reloadHost2TableData(updatedData["data"], updatedData["path"]);
                     }
                 });
             }
         });
     });
 
-    $('#tsd-transfer-btn').click(function() {
+    $('#host1-transfer-btn').click(function() {
         var transferredData = [];
 
-        tsd_table.api().rows('.selected').data().each(function(item) {
+        host1_table.api().rows('.selected').data().each(function(item) {
             transferredData.push({"name": item[0], "type": item[2]});
         });
 
-        var from_path = extractPath($('.tsd-path-link:last').attr('href'));
-        var to_path = extractPath($('.mosler-path-link:last').attr('href'));
+        var from_path = extractPath($('.host1-path-link:last').attr('href'));
+        var to_path = extractPath($('.host2-path-link:last').attr('href'));
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
             type: "POST",
             url: "/sftp_proxy/dashboard/transfer",
-            data: JSON.stringify({"from": {"path": from_path, "name": "tsd", "data": transferredData}, "to": {"path": to_path, "name": "mosler"}}),
+            data: JSON.stringify({"from": {"path": from_path, "name": "host1", "data": transferredData}, "to": {"path": to_path, "name": "host2"}}),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             beforeSend: function(xhr) {
@@ -378,32 +378,32 @@ $(document).ready(function() {
                 }
             },
             success: function() {
-                var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=mosler";
+                var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
                 $.ajax({
                     type: "GET",
                     url: url,
                     success: function(updatedData) {
-                        reloadMoslerTableData(updatedData["data"], updatedData["path"]);
+                        reloadHost2TableData(updatedData["data"], updatedData["path"]);
                     }
                 });
             }
         });
     });
 
-    $('#tsd-delete-btn').click(function() {
+    $('#host1-delete-btn').click(function() {
         var transferredData = [];
 
-        tsd_table.api().rows('.selected').data().each(function(item) {
+        host1_table.api().rows('.selected').data().each(function(item) {
             transferredData.push({"name": item[0], "type": item[2]});
         });
 
-        var path = extractPath($('.tsd-path-link:last').attr('href'));
+        var path = extractPath($('.host1-path-link:last').attr('href'));
         var csrftoken = getCookie('csrftoken');
 
         $.ajax({
             type: "POST",
             url: "/sftp_proxy/dashboard/delete",
-            data: JSON.stringify({"source": "tsd", "path": path, "data": transferredData}),
+            data: JSON.stringify({"source": "host1", "path": path, "data": transferredData}),
             dataType: "json",
             contentType: 'application/json; charset=utf-8',
             beforeSend: function(xhr) {
@@ -412,12 +412,12 @@ $(document).ready(function() {
                 }
             },
             success: function(returnedData) {
-                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=tsd";
+                var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host1";
                 $.ajax({
                     type: "GET",
                     url: url,
                     success: function(updatedData) {
-                        reloadTsdTableData(updatedData["data"], updatedData["path"]);
+                        reloadHost1TableData(updatedData["data"], updatedData["path"]);
                     }
                 });
             }
