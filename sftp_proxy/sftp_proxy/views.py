@@ -121,7 +121,7 @@ class DeleteView(View):
 
     def post(self, request):
         """
-        The json structure received by this method is {"source": "tsd or mosler", "path": "the parent path of the files
+        The json structure received by this method is {"source": "host1 or host2", "path": "the parent path of the files
         and folders to be deleted", "data": [{"name": "file name or folder name", "type": "file or folder"},
         {"name": "file name or folder name", "type": "file or folder"}]}
         """
