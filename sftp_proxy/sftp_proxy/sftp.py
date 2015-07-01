@@ -18,18 +18,7 @@ def get_sftp_client(source, session_key):
     elif source == 'host2':
         return HOST2_CONNECTIONS[session_key]
 
-def create_sftp_client(source, user_name, password, otc, hostname, port):
-    # TODO: Replace this check with a checkbox in the dashboard on whether to
-    #       concatenate password and one time key (otc)
-    if source == 'host1':
-        return _create_host1_sftp_client(user_name, password, otc, hostname, port)
-    elif source == 'host2':
-        return _create_host2_sftp_client(user_name, password + otc, hostname, port)
-
-def _create_host1_sftp_client(user_name, password, otc, hostname, port):
-    transport = Transport((hostname, int(port)))
-    transport.start_client()
-
+def create_sftp_client(user_name, password, otc, hostname, port):
     def sftp_auth_handler(title, instructions, prompt_list):
         if len(prompt_list) == 0:
             return []
@@ -38,12 +27,14 @@ def _create_host1_sftp_client(user_name, password, otc, hostname, port):
         else:
             return [otc]
 
-    transport.auth_interactive(user_name, sftp_auth_handler)
-    return transport.open_sftp_client()
-
-def _create_host2_sftp_client(user_name, password, hostname, port):
     transport = Transport((hostname, int(port)))
-    transport.connect(None, user_name, password)
+
+    if otc != '':
+        transport.start_client()
+        transport.auth_interactive(user_name, sftp_auth_handler)
+    else:
+        transport.connect(None, user_name, password)
+
     return transport.open_sftp_client()
 
 def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_client_to):

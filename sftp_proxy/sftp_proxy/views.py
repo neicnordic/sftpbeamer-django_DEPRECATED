@@ -38,7 +38,7 @@ class LoginView(View):
             hostname = request.POST['hostname']
             port = request.POST['port']
             source = request.POST['source']
-            sftp_client = sftp.create_sftp_client(source, user_name, password, otc, hostname, port)
+            sftp_client = sftp.create_sftp_client(user_name, password, otc, hostname, port)
             if source == 'host1':
                 sftp.HOST1_CONNECTIONS[session_key] = sftp_client
 
