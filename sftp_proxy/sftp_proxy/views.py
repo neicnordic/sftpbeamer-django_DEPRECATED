@@ -1,16 +1,17 @@
 import stat
 import json
-
 from os import sep
 
 from django.views.generic import View
 from django.shortcuts import render
 from django.conf import settings
-from django.http import HttpResponseRedirect, HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed
+from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed
 
-from paramiko.sftp_attr import SFTPAttributes
+from paramiko.ssh_exception import SSHException
 
 from . import sftp
+from .utils import session_key_required_in_cookie
+
 
 # Create your views here.
 
@@ -21,7 +22,8 @@ class DashboardView(View):
         if not request.session.session_key:
             request.session.save()
             response = render(request, 'dashboard.html')
-            response.set_cookie(settings.SESSION_COOKIE_NAME, request.session.session_key)
+            sftp.clean_sftp_connections()
+            request.session.set_expiry(settings.SESSION_COOKIE_AGE)
             return response
         else:
             return render(request, 'dashboard.html')
@@ -29,6 +31,7 @@ class DashboardView(View):
 
 class LoginView(View):
 
+    @session_key_required_in_cookie
     def post(self, request):
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
@@ -38,27 +41,34 @@ class LoginView(View):
             hostname = request.POST['hostname']
             port = request.POST['port']
             source = request.POST['source']
-            sftp_client = sftp.create_sftp_client(user_name, password, otc, hostname, port)
-            if source == 'host1':
-                sftp.HOST1_CONNECTIONS[session_key] = sftp_client
+            try:
+                sftp_client = sftp.create_sftp_client(user_name, password, otc, hostname, port)
+            except SSHException as exce:
+                context = {"exception": exce.args[0]}
+                return JsonResponse(context)
+            else:
 
-            if source == 'host2':
-                sftp.HOST2_CONNECTIONS[session_key] = sftp_client
+                sftp.add_sftp_connection(session_key, source, sftp_client, request.session.get_expiry_date())
 
-            content = sftp_client.listdir_iter()
-            data_list = []
-            for file_attr in content:
-                if stat.S_ISDIR(file_attr.st_mode):
-                    data_list.append([file_attr.filename, file_attr.st_size, "folder"])
+                try:
+                    content = sftp_client.listdir_iter()
+                    data_list = []
+                    for file_attr in content:
+                        if stat.S_ISDIR(file_attr.st_mode):
+                            data_list.append([file_attr.filename, file_attr.st_size, "folder"])
+                        else:
+                            data_list.append([file_attr.filename, file_attr.st_size, "file"])
+                except PermissionError as error:
+                    return JsonResponse({"exception": error.strerror})
                 else:
-                    data_list.append([file_attr.filename, file_attr.st_size, "file"])
-            context = {"data": data_list}
-            return JsonResponse(context)
+                    return JsonResponse({"data": data_list})
         else:
             return HttpResponseNotAllowed()
 
+
 class ListContentView(View):
 
+    @session_key_required_in_cookie
     def get(self, request):
         if request.is_ajax():
             path = request.GET["path"]
@@ -66,29 +76,31 @@ class ListContentView(View):
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             data_list = []
 
-            if source == 'host1':
-                sftp_client = sftp.HOST1_CONNECTIONS[session_key]
-            elif source == 'host2':
-                sftp_client = sftp.HOST2_CONNECTIONS[session_key]
+            if source == 'host1' or source == 'host2':
+                sftp_client = sftp.get_sftp_client(source, session_key)
             else:
                 # Some exception
                 return HttpResponseBadRequest()
 
-            sftp_client.chdir(path)
-            content = sftp_client.listdir_iter()
-            for file_attr in content:
-                if stat.S_ISDIR(file_attr.st_mode):
-                    data_list.append([file_attr.filename, file_attr.st_size, "folder"])
-                else:
-                    data_list.append([file_attr.filename, file_attr.st_size, "file"])
-
-            context = {"data": data_list, "path": path}
-            return JsonResponse(context)
+            try:
+                sftp_client.chdir(path)
+                content = sftp_client.listdir_iter()
+                for file_attr in content:
+                    if stat.S_ISDIR(file_attr.st_mode):
+                        data_list.append([file_attr.filename, file_attr.st_size, "folder"])
+                    else:
+                        data_list.append([file_attr.filename, file_attr.st_size, "file"])
+            except PermissionError as error:
+                return JsonResponse({"exception": error.strerror})
+            else:
+                return JsonResponse({"data": data_list, "path": path})
         else:
             return HttpResponseNotAllowed()
 
+
 class TransferView(View):
 
+    @session_key_required_in_cookie
     def post(self, request):
         """
         The json structure received by this method is {"from" : {"path" : "the absolute path
@@ -106,19 +118,24 @@ class TransferView(View):
             sftp_client_to = sftp.get_sftp_client(request_data['to']['name'], session_key)
             to_path = request_data['to']['path']
 
-            for item in request_data['from']['data']:
-                if item['type'] == 'file':
-                    sftp_client_from.getfo(from_path + sep + item['name'],
-                                           sftp_client_to.open(to_path + sep + item['name'], 'w'))
-                else:
-                    sftp.transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
-
-            return JsonResponse({"status": "success"})
+            try:
+                for item in request_data['from']['data']:
+                    if item['type'] == 'file':
+                        sftp_client_from.getfo(from_path + sep + item['name'],
+                                               sftp_client_to.open(to_path + sep + item['name'], 'w'))
+                    else:
+                        sftp.transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
+            except PermissionError as error:
+                return JsonResponse({"exception": error.strerror})
+            else:
+                return JsonResponse({"status": "success"})
         else:
             return HttpResponseNotAllowed()
 
+
 class DeleteView(View):
 
+    @session_key_required_in_cookie
     def post(self, request):
         """
         The json structure received by this method is {"source": "host1 or host2", "path": "the parent path of the files
@@ -131,11 +148,15 @@ class DeleteView(View):
             sftp_client = sftp.get_sftp_client(request_data['source'], session_key)
             path = request_data['path']
 
-            for item in request_data['data']:
-                if item['type'] == 'file':
-                    sftp_client.remove(path + sep + item['name'])
-                else:
-                    sftp.delete_folder(item['name'], path, sftp_client)
-            return JsonResponse({"status": "success"})
+            try:
+                for item in request_data['data']:
+                    if item['type'] == 'file':
+                        sftp_client.remove(path + sep + item['name'])
+                    else:
+                        sftp.delete_folder(item['name'], path, sftp_client)
+            except PermissionError as error:
+                    return JsonResponse({"exception": error.strerror})
+            else:
+                return JsonResponse({"status": "success"})
         else:
             return HttpResponseNotAllowed()

@@ -51,7 +51,7 @@
                             <label class="sr-only" for="host1-port">Port</label>
                             <input type="text" class="form-control form-input" id="host1-port" placeholder="Port" value="22">
                         </div>
-                        <input type="submit" class="btn btn-primary btn-connect" value="Connect">
+                        <input type="submit" id="host1-submit-btn" class="btn btn-primary btn-connect" value="Connect">
                     </form>
                     <div class="panel panel-default">
                         <div class="panel-heading" id="host1-path"></div>
@@ -59,8 +59,8 @@
                     </div>
                 </div>
                 <div class="panel-footer text-right">
-                    <button type="button" class="btn btn-primary" id="host1-delete-btn">Delete</button>
-                    <button type="button" class="btn btn-primary" id="host1-transfer-btn">Transfer</button>
+                    <button type="button" class="btn btn-primary" disabled="true" id="host1-delete-btn">Delete</button>
+                    <button type="button" class="btn btn-primary" disabled="true" id="host1-transfer-btn">Transfer</button>
                 </div>
             </div>
             <div class="panel panel-info col-md-6 host2">
@@ -91,7 +91,7 @@
                             <label class="sr-only" for="host2-port">Port</label>
                             <input type="text" class="form-control form-input" id="host2-port" placeholder="Port" value="22">
                         </div>
-                        <input type="submit" class="btn btn-primary btn-connect" value="Connect">
+                        <input type="submit" id="host2-submit-btn" class="btn btn-primary btn-connect" value="Connect">
                     </form>
                     <div class="panel panel-default">
                         <div class="panel-heading" id="host2-path"></div>
@@ -99,12 +99,28 @@
                     </div>
                 </div>
                 <div class="panel-footer text-right">
-                    <button type="button" class="btn btn-primary" id="host2-delete-btn">Delete</button>
-                    <button type="button" class="btn btn-primary" id="host2-transfer-btn">Transfer</button>
+                    <button type="button" class="btn btn-primary" disabled="true" id="host2-delete-btn">Delete</button>
+                    <button type="button" class="btn btn-primary" disabled="true" id="host2-transfer-btn">Transfer</button>
                 </div>
             </div>
         </div>
         <div class="panel-footer"></div>
+    </div>
+
+    <div class="modal fade" role="dialog"  tabindex="-1" aria-labelledby="my_modal_label">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h5 class="modal-title" id="my_modal_label"></h5>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

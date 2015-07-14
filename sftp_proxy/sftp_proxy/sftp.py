@@ -2,21 +2,36 @@ __author__ = 'Xiaxi Li'
 __email__ = 'xiaxi.li@ii.uib.no'
 __date__ = '09/Jun/2015'
 
-import base64
 import stat
 from os import sep
 
+from django.utils.timezone import now
 from paramiko.transport import Transport
-from paramiko.rsakey import RSAKey
 
-HOST1_CONNECTIONS = {}
-HOST2_CONNECTIONS = {}
+
+
+# the structure of this dictionary is
+# {"session_key": {"host1": sftp_connection, "host2": sftp_connection, "expiry_time": time}}
+SFTP_CONNECTIONS = {}
+
+
+def add_sftp_connection(session_key, source, sftp_client, expiry_time):
+    if session_key in SFTP_CONNECTIONS:
+        SFTP_CONNECTIONS[session_key][source] = sftp_client
+    else:
+        SFTP_CONNECTIONS[session_key] = {source: sftp_client, 'expiry_time': expiry_time}
+
+
+def clean_sftp_connections():
+    for key in list(iter(SFTP_CONNECTIONS)):
+        if 'expiry_time' in SFTP_CONNECTIONS[key]:
+            if now() > SFTP_CONNECTIONS[key]['expiry_time']:
+                del SFTP_CONNECTIONS[key]
+
 
 def get_sftp_client(source, session_key):
-    if source == 'host1':
-        return HOST1_CONNECTIONS[session_key]
-    elif source == 'host2':
-        return HOST2_CONNECTIONS[session_key]
+    return SFTP_CONNECTIONS[session_key][source]
+
 
 def create_sftp_client(user_name, password, otc, hostname, port):
     def sftp_auth_handler(title, instructions, prompt_list):
@@ -37,6 +52,7 @@ def create_sftp_client(user_name, password, otc, hostname, port):
 
     return transport.open_sftp_client()
 
+
 def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_client_to):
     sftp_client_to.chdir(to_path)
     sftp_client_to.mkdir(folder_name)
@@ -52,6 +68,7 @@ def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_clie
         else:
             sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
                                    sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'))
+
 
 def delete_folder(folder_name, path, sftp_client):
     for file_attr in sftp_client.listdir_attr(path + sep + folder_name):
