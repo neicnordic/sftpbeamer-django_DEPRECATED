@@ -19,6 +19,8 @@
     <script type="text/javascript" src="{% static 'js/jquery.dataTables.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/dataTables.bootstrap.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/dashboard.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/ws.js' %}"></script>
+    <script type="text/javascript" src="{% static 'omnibus/omnibus.min.js' %}"></script>
 </head>
 <body>
     <div class="panel panel-default container-fluid">
@@ -104,7 +106,13 @@
                 </div>
             </div>
         </div>
-        <div class="panel-footer"></div>
+        <div class="panel-footer" style="height: 41px">
+            <div id="transferred-file-name" class="col-md-1"></div>
+            <div class="progress col-md-11" style="margin-bottom: 0; padding-left: 0; padding-right: 0">
+                <div id="transferred-file-progress-bar" class="progress-bar progress-bar-info progress-bar-striped" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0; color: black;">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="modal fade" role="dialog"  tabindex="-1" aria-labelledby="my_modal_label">

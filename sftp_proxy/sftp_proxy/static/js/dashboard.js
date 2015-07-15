@@ -536,7 +536,7 @@ $(document).ready(function() {
                     xhr.setRequestHeader("X-CSRFToken", csrftoken);
                 }
             },
-            success: function() {
+            success: function(returnedData) {
                 if (returnedData["error"]) {
                     change_modal_property("Error", returnedData["error"]);
                     var modal = $('.modal');

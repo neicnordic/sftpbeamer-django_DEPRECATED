@@ -8,9 +8,11 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotAllowed
 
 from paramiko.ssh_exception import SSHException
+from paramiko import SFTPError
 
 from . import sftp
 from .utils import session_key_required_in_cookie
+from .ws import update_transmission_progress
 
 
 # Create your views here.
@@ -60,6 +62,8 @@ class LoginView(View):
                             data_list.append([file_attr.filename, file_attr.st_size, "file"])
                 except PermissionError as error:
                     return JsonResponse({"exception": error.strerror})
+                except SFTPError as error:
+                    return JsonResponse({"exception": error.args[0]})
                 else:
                     return JsonResponse({"data": data_list})
         else:
@@ -92,6 +96,8 @@ class ListContentView(View):
                         data_list.append([file_attr.filename, file_attr.st_size, "file"])
             except PermissionError as error:
                 return JsonResponse({"exception": error.strerror})
+            except SFTPError as error:
+                return JsonResponse({"exception": error.args[0]})
             else:
                 return JsonResponse({"data": data_list, "path": path})
         else:
@@ -122,15 +128,26 @@ class TransferView(View):
                 for item in request_data['from']['data']:
                     if item['type'] == 'file':
                         sftp_client_from.getfo(from_path + sep + item['name'],
-                                               sftp_client_to.open(to_path + sep + item['name'], 'w'))
+                                               sftp_client_to.open(to_path + sep + item['name'], 'w'),
+                                               lambda transferred_bytes, total_bytes: update_transmission_progress(transferred_bytes, total_bytes, file_name=item['name']))
                     else:
-                        sftp.transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
+                        # sftp.transfer_folder(item['name'], from_path, sftp_client_from,
+                        #                      to_path, sftp_client_to, TransferView._getfo_callback)
+                        sftp.transfer_folder(item['name'], from_path, sftp_client_from,
+                                             to_path, sftp_client_to)
             except PermissionError as error:
                 return JsonResponse({"exception": error.strerror})
+            except SFTPError as error:
+                return JsonResponse({"exception": error.args[0]})
             else:
                 return JsonResponse({"status": "success"})
         else:
             return HttpResponseNotAllowed()
+
+    @staticmethod
+    def _getfo_callback(transferred_bytes, total_bytes):
+        update_transmission_progress(transferred_bytes, total_bytes)
+
 
 
 class DeleteView(View):
@@ -156,6 +173,8 @@ class DeleteView(View):
                         sftp.delete_folder(item['name'], path, sftp_client)
             except PermissionError as error:
                     return JsonResponse({"exception": error.strerror})
+            except SFTPError as error:
+                return JsonResponse({"exception": error.args[0]})
             else:
                 return JsonResponse({"status": "success"})
         else:

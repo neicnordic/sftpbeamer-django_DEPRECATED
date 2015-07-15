@@ -8,6 +8,8 @@ from os import sep
 from django.utils.timezone import now
 from paramiko.transport import Transport
 
+from .ws import update_transmission_progress
+
 
 
 # the structure of this dictionary is
@@ -67,7 +69,8 @@ def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_clie
             transfer_folder(file_attr.filename, from_cwd, sftp_client_from, to_cwd, sftp_client_to)
         else:
             sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
-                                   sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'))
+                                   sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'),
+                                   lambda transferred_bytes, total_bytes: update_transmission_progress(transferred_bytes, total_bytes, file_name=file_attr.filename))
 
 
 def delete_folder(folder_name, path, sftp_client):
