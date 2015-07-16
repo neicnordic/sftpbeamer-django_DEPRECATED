@@ -3,7 +3,7 @@
  */
 
 $(document).ready(function() {
-    var transport = WebSocket; // SockJS can be used alternatively
+    var transport = WebSocket;
 
 // Receive the path for the connection from the django template context:
     var endpoint = 'ws://localhost:4242/ec';
@@ -11,7 +11,6 @@ $(document).ready(function() {
 // Create a new connection using transport, endpoint and options
     var connection = new Omnibus(transport, endpoint);
     var channel = connection.openChannel('progress');
-    //channel.send('ping-event', {message: 'hello world'});
 
     var transferred_file_name = $('#transferred-file-name');
     var progress_bar = $('#transferred-file-progress-bar');

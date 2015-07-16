@@ -35,6 +35,12 @@ def get_sftp_client(source, session_key):
     return SFTP_CONNECTIONS[session_key][source]
 
 
+def remove_sftp_connection(source, session_key):
+    if session_key in SFTP_CONNECTIONS:
+        if source in SFTP_CONNECTIONS[session_key]:
+            del SFTP_CONNECTIONS[session_key][source]
+
+
 def create_sftp_client(user_name, password, otc, hostname, port):
     def sftp_auth_handler(title, instructions, prompt_list):
         if len(prompt_list) == 0:

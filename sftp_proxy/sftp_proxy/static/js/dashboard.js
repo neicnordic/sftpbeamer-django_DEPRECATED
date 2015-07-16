@@ -92,7 +92,13 @@ $(document).ready(function() {
                         });
                         $("#host1-delete-btn").prop("disabled", false);
                         $("#host1-transfer-btn").prop("disabled", false);
+                        $("#host1-disconnect-btn").prop("disabled", false);
                         $("#host1-submit-btn").prop("disabled", true);
+                        $("#host1-username").prop("disabled", true);
+                        $("#host1-password").prop("disabled", true);
+                        $("#host1-otc").prop("disabled", true);
+                        $("#host1-hostname").prop("disabled", true);
+                        $("#host1-port").prop("disabled", true);
                     }
                 },
                 dataType: "json",
@@ -280,7 +286,13 @@ $(document).ready(function() {
                         });
                         $("#host2-delete-btn").prop("disabled", false);
                         $("#host2-transfer-btn").prop("disabled", false);
+                        $("#host2-disconnect-btn").prop("disabled", false);
                         $("#host2-submit-btn").prop("disabled", true);
+                        $("#host2-username").prop("disabled", true);
+                        $("#host2-password").prop("disabled", true);
+                        $("#host2-otc").prop("disabled", true);
+                        $("#host2-hostname").prop("disabled", true);
+                        $("#host2-port").prop("disabled", true);
                     }
                 },
                 dataType: "json",
@@ -291,6 +303,61 @@ $(document).ready(function() {
                     }
                 }
             });
+    });
+
+    function disconnect_sftp(source) {
+        if (source == 'host1') {
+            $.ajax({
+                type: "GET",
+                url: "/sftp_proxy/dashboard/disconnect?source=host1",
+                success: function () {
+                    host1_table.api().destroy();
+                    $("#host1-table").empty();
+                    $("#host1-table-div").html("");
+                    $("#host1-path").html("");
+                    $("#host1-delete-btn").prop("disabled", true);
+                    $("#host1-transfer-btn").prop("disabled", true);
+                    $("#host1-disconnect-btn").prop("disabled", true);
+                    $("#host1-submit-btn").prop("disabled", false);
+                    $("#host1-username").prop("disabled", false);
+                    $("#host1-password").prop("disabled", false);
+                    $("#host1-otc").prop("disabled", false);
+                    $("#host1-hostname").prop("disabled", false);
+                    $("#host1-port").prop("disabled", false);
+                }
+            });
+        }
+        if (source == 'host2') {
+            $.ajax({
+                type: "GET",
+                url: "/sftp_proxy/dashboard/disconnect?source=host2",
+                success: function () {
+                    host2_table.api().destroy();
+                    $("#host2-table").empty();
+                    $("#host2-table-div").html("");
+                    $("#host2-path").html("");
+                    $("#host2-delete-btn").prop("disabled", true);
+                    $("#host2-transfer-btn").prop("disabled", true);
+                    $("#host2-disconnect-btn").prop("disabled", true);
+                    $("#host2-submit-btn").prop("disabled", false);
+                    $("#host2-username").prop("disabled", false);
+                    $("#host2-password").prop("disabled", false);
+                    $("#host2-otc").prop("disabled", false);
+                    $("#host2-hostname").prop("disabled", false);
+                    $("#host2-port").prop("disabled", false);
+                }
+            });
+        }
+    }
+
+    $('#host1-disconnect-btn').click(function(event) {
+        event.preventDefault();
+        disconnect_sftp('host1');
+    });
+
+    $('#host2-disconnect-btn').click(function(event) {
+        event.preventDefault();
+        disconnect_sftp('host2');
     });
 
     $(document).on('click', '.host2-folder-link', function(event) {
@@ -412,211 +479,253 @@ $(document).ready(function() {
     $('#host2-transfer-btn').click(function() {
         var transferredData = [];
 
-        host2_table.api().rows('.selected').data().each(function(item) {
-            transferredData.push({"name": item[0], "type": item[2]});
-        });
+        var selected_items = host2_table.api().rows('.selected').data();
+        if (selected_items.length == 0) {
+            change_modal_property("Information", "No files or folders are selected.");
+            $('.modal').modal({
+                keyboard: false,
+                backdrop: 'static'
+            });
+        } else {
+            selected_items.each(function (item) {
+                transferredData.push({"name": item[0], "type": item[2]});
+            });
 
-        var from_path = extractPath($('.host2-path-link:last').attr('href'));
-        var to_path = extractPath($('.host1-path-link:last').attr('href'));
-        var csrftoken = getCookie('csrftoken');
+            var from_path = extractPath($('.host2-path-link:last').attr('href'));
+            var to_path = extractPath($('.host1-path-link:last').attr('href'));
+            var csrftoken = getCookie('csrftoken');
 
-        $.ajax({
-            type: "POST",
-            url: "/sftp_proxy/dashboard/transfer",
-            data: JSON.stringify({"from": {"path": from_path, "name": "host2", "data": transferredData}, "to": {"path": to_path, "name": "host1"}}),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            beforeSend: function(xhr) {
-                if (!this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            $.ajax({
+                type: "POST",
+                url: "/sftp_proxy/dashboard/transfer",
+                data: JSON.stringify({
+                    "from": {"path": from_path, "name": "host2", "data": transferredData},
+                    "to": {"path": to_path, "name": "host1"}
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: function (xhr) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function (returnedData) {
+                    if (returnedData["error"]) {
+                        change_modal_property("Error", returnedData["error"]);
+                        var modal = $('.modal');
+                        modal.one('hide.bs.modal', function (event) {
+                            location.reload();
+                        });
+                        modal.modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else if (returnedData["exception"]) {
+                        change_modal_property("Exception", returnedData["exception"]);
+                        $('.modal').modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else {
+                        var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
+                        $.ajax({
+                            type: "GET",
+                            url: url,
+                            success: function (updatedData) {
+                                reloadHost1TableData(updatedData["data"], updatedData["path"]);
+                            }
+                        });
+                    }
                 }
-            },
-            success: function(returnedData) {
-                if (returnedData["error"]) {
-                    change_modal_property("Error", returnedData["error"]);
-                    var modal = $('.modal');
-                    modal.one('hide.bs.modal', function (event) {
-                        location.reload();
-                    });
-                    modal.modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else if (returnedData["exception"]) {
-                    change_modal_property("Exception", returnedData["exception"]);
-                    $('.modal').modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else {
-                    var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
-                    $.ajax({
-                        type: "GET",
-                        url: url,
-                        success: function (updatedData) {
-                            reloadHost1TableData(updatedData["data"], updatedData["path"]);
-                        }
-                    });
-                }
-            }
-        });
+            });
+        }
     });
 
     $('#host2-delete-btn').click(function() {
         var transferredData = [];
 
-        host2_table.api().rows('.selected').data().each(function(item) {
-            transferredData.push({"name": item[0], "type": item[2]});
-        });
+        var selected_items = host2_table.api().rows('.selected').data();
+        if (selected_items.length == 0) {
+            change_modal_property("Information", "No files or folders are selected.");
+            $('.modal').modal({
+                keyboard: false,
+                backdrop: 'static'
+            });
+        } else {
+            selected_items.each(function (item) {
+                transferredData.push({"name": item[0], "type": item[2]});
+            });
 
-        var path = extractPath($('.host2-path-link:last').attr('href'));
-        var csrftoken = getCookie('csrftoken');
+            var path = extractPath($('.host2-path-link:last').attr('href'));
+            var csrftoken = getCookie('csrftoken');
 
-        $.ajax({
-            type: "POST",
-            url: "/sftp_proxy/dashboard/delete",
-            data: JSON.stringify({"source": "host2", "path": path, "data": transferredData}),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            beforeSend: function(xhr) {
-                if (!this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            $.ajax({
+                type: "POST",
+                url: "/sftp_proxy/dashboard/delete",
+                data: JSON.stringify({"source": "host2", "path": path, "data": transferredData}),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: function (xhr) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function (returnedData) {
+                    if (returnedData["error"]) {
+                        change_modal_property("Error", returnedData["error"]);
+                        var modal = $('.modal');
+                        modal.one('hide.bs.modal', function (event) {
+                            location.reload();
+                        });
+                        modal.modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else if (returnedData["exception"]) {
+                        change_modal_property("Exception", returnedData["exception"]);
+                        $('.modal').modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else {
+                        var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host2";
+                        $.ajax({
+                            type: "GET",
+                            url: url,
+                            success: function (updatedData) {
+                                reloadHost2TableData(updatedData["data"], updatedData["path"]);
+                            }
+                        });
+                    }
                 }
-            },
-            success: function(returnedData) {
-                if (returnedData["error"]) {
-                    change_modal_property("Error", returnedData["error"]);
-                    var modal = $('.modal');
-                    modal.one('hide.bs.modal', function (event) {
-                        location.reload();
-                    });
-                    modal.modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else if (returnedData["exception"]) {
-                    change_modal_property("Exception", returnedData["exception"]);
-                    $('.modal').modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else {
-                    var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host2";
-                    $.ajax({
-                        type: "GET",
-                        url: url,
-                        success: function (updatedData) {
-                            reloadHost2TableData(updatedData["data"], updatedData["path"]);
-                        }
-                    });
-                }
-            }
-        });
+            });
+        }
     });
 
     $('#host1-transfer-btn').click(function() {
         var transferredData = [];
 
-        host1_table.api().rows('.selected').data().each(function(item) {
-            transferredData.push({"name": item[0], "type": item[2]});
-        });
+        var selected_items = host1_table.api().rows('.selected').data();
+        if (selected_items.length == 0) {
+            change_modal_property("Information", "No files or folders are selected.");
+            $('.modal').modal({
+                keyboard: false,
+                backdrop: 'static'
+            });
+        } else {
+            selected_items.each(function (item) {
+                transferredData.push({"name": item[0], "type": item[2]});
+            });
 
-        var from_path = extractPath($('.host1-path-link:last').attr('href'));
-        var to_path = extractPath($('.host2-path-link:last').attr('href'));
-        var csrftoken = getCookie('csrftoken');
+            var from_path = extractPath($('.host1-path-link:last').attr('href'));
+            var to_path = extractPath($('.host2-path-link:last').attr('href'));
+            var csrftoken = getCookie('csrftoken');
 
-        $.ajax({
-            type: "POST",
-            url: "/sftp_proxy/dashboard/transfer",
-            data: JSON.stringify({"from": {"path": from_path, "name": "host1", "data": transferredData}, "to": {"path": to_path, "name": "host2"}}),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            beforeSend: function(xhr) {
-                if (!this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            $.ajax({
+                type: "POST",
+                url: "/sftp_proxy/dashboard/transfer",
+                data: JSON.stringify({
+                    "from": {"path": from_path, "name": "host1", "data": transferredData},
+                    "to": {"path": to_path, "name": "host2"}
+                }),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: function (xhr) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function (returnedData) {
+                    if (returnedData["error"]) {
+                        change_modal_property("Error", returnedData["error"]);
+                        var modal = $('.modal');
+                        modal.one('hide.bs.modal', function (event) {
+                            location.reload();
+                        });
+                        modal.modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else if (returnedData["exception"]) {
+                        change_modal_property("Exception", returnedData["exception"]);
+                        $('.modal').modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else {
+                        var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
+                        $.ajax({
+                            type: "GET",
+                            url: url,
+                            success: function (updatedData) {
+                                reloadHost2TableData(updatedData["data"], updatedData["path"]);
+                            }
+                        });
+                    }
                 }
-            },
-            success: function(returnedData) {
-                if (returnedData["error"]) {
-                    change_modal_property("Error", returnedData["error"]);
-                    var modal = $('.modal');
-                    modal.one('hide.bs.modal', function (event) {
-                        location.reload();
-                    });
-                    modal.modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else if (returnedData["exception"]) {
-                    change_modal_property("Exception", returnedData["exception"]);
-                    $('.modal').modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else {
-                    var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
-                    $.ajax({
-                        type: "GET",
-                        url: url,
-                        success: function (updatedData) {
-                            reloadHost2TableData(updatedData["data"], updatedData["path"]);
-                        }
-                    });
-                }
-            }
-        });
+            });
+        }
     });
 
     $('#host1-delete-btn').click(function() {
         var transferredData = [];
 
-        host1_table.api().rows('.selected').data().each(function(item) {
-            transferredData.push({"name": item[0], "type": item[2]});
-        });
+        var selected_items = host1_table.api().rows('.selected').data();
+        if (selected_items.length == 0) {
+            change_modal_property("Information", "No files or folders are selected.");
+            $('.modal').modal({
+                keyboard: false,
+                backdrop: 'static'
+            });
+        } else {
+            selected_items.each(function (item) {
+                transferredData.push({"name": item[0], "type": item[2]});
+            });
 
-        var path = extractPath($('.host1-path-link:last').attr('href'));
-        var csrftoken = getCookie('csrftoken');
+            var path = extractPath($('.host1-path-link:last').attr('href'));
+            var csrftoken = getCookie('csrftoken');
 
-        $.ajax({
-            type: "POST",
-            url: "/sftp_proxy/dashboard/delete",
-            data: JSON.stringify({"source": "host1", "path": path, "data": transferredData}),
-            dataType: "json",
-            contentType: 'application/json; charset=utf-8',
-            beforeSend: function(xhr) {
-                if (!this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            $.ajax({
+                type: "POST",
+                url: "/sftp_proxy/dashboard/delete",
+                data: JSON.stringify({"source": "host1", "path": path, "data": transferredData}),
+                dataType: "json",
+                contentType: 'application/json; charset=utf-8',
+                beforeSend: function (xhr) {
+                    if (!this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                success: function (returnedData) {
+                    if (returnedData["error"]) {
+                        change_modal_property("Error", returnedData["error"]);
+                        var modal = $('.modal');
+                        modal.one('hide.bs.modal', function (event) {
+                            location.reload();
+                        });
+                        modal.modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else if (returnedData["exception"]) {
+                        change_modal_property("Exception", returnedData["exception"]);
+                        $('.modal').modal({
+                            keyboard: false,
+                            backdrop: 'static'
+                        });
+                    } else {
+                        var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host1";
+                        $.ajax({
+                            type: "GET",
+                            url: url,
+                            success: function (updatedData) {
+                                reloadHost1TableData(updatedData["data"], updatedData["path"]);
+                            }
+                        });
+                    }
                 }
-            },
-            success: function(returnedData) {
-                if (returnedData["error"]) {
-                    change_modal_property("Error", returnedData["error"]);
-                    var modal = $('.modal');
-                    modal.one('hide.bs.modal', function (event) {
-                        location.reload();
-                    });
-                    modal.modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else if (returnedData["exception"]) {
-                    change_modal_property("Exception", returnedData["exception"]);
-                    $('.modal').modal({
-                        keyboard: false,
-                        backdrop: 'static'
-                    });
-                } else {
-                    var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host1";
-                    $.ajax({
-                        type: "GET",
-                        url: url,
-                        success: function (updatedData) {
-                            reloadHost1TableData(updatedData["data"], updatedData["path"]);
-                        }
-                    });
-                }
-            }
-        });
+            });
+        }
     });
 
     function extractPath(href) {

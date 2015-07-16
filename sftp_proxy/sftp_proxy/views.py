@@ -70,6 +70,19 @@ class LoginView(View):
             return HttpResponseNotAllowed()
 
 
+class DisconnectSftpView(View):
+
+    @session_key_required_in_cookie
+    def get(self, request):
+        if request.is_ajax():
+            source = request.GET["source"]
+            session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
+            sftp.remove_sftp_connection(source, session_key)
+            return JsonResponse({"status": "success"})
+        else:
+            return HttpResponseNotAllowed()
+
+
 class ListContentView(View):
 
     @session_key_required_in_cookie
