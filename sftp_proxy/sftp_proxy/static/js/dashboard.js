@@ -495,6 +495,7 @@ $(document).ready(function() {
             var to_path = extractPath($('.host1-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
+            var ws_channel = create_ws_channel();
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -510,6 +511,7 @@ $(document).ready(function() {
                     }
                 },
                 success: function (returnedData) {
+                    ws_channel.close();
                     if (returnedData["error"]) {
                         change_modal_property("Error", returnedData["error"]);
                         var modal = $('.modal');
@@ -621,6 +623,7 @@ $(document).ready(function() {
             var to_path = extractPath($('.host2-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
+            var ws_channel = create_ws_channel();
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -636,6 +639,7 @@ $(document).ready(function() {
                     }
                 },
                 success: function (returnedData) {
+                    ws_channel.close();
                     if (returnedData["error"]) {
                         change_modal_property("Error", returnedData["error"]);
                         var modal = $('.modal');

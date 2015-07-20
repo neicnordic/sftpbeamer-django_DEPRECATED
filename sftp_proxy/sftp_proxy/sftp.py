@@ -39,6 +39,8 @@ def remove_sftp_connection(source, session_key):
     if session_key in SFTP_CONNECTIONS:
         if source in SFTP_CONNECTIONS[session_key]:
             del SFTP_CONNECTIONS[session_key][source]
+            if len(SFTP_CONNECTIONS[session_key].keys()) == 1:
+                del SFTP_CONNECTIONS[session_key]
 
 
 def create_sftp_client(user_name, password, otc, hostname, port):

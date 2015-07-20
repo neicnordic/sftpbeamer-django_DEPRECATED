@@ -2,7 +2,7 @@
  * Created by Xiaxi Li on 14/Jul/2015.
  */
 
-$(document).ready(function() {
+function create_ws_channel() {
     var transport = WebSocket;
 
 // Receive the path for the connection from the django template context:
@@ -11,6 +11,7 @@ $(document).ready(function() {
 // Create a new connection using transport, endpoint and options
     var connection = new Omnibus(transport, endpoint);
     var channel = connection.openChannel('progress');
+
 
     var transferred_file_name = $('#transferred-file-name');
     var progress_bar = $('#transferred-file-progress-bar');
@@ -27,4 +28,6 @@ $(document).ready(function() {
             progress_bar.css("width", percentage + '%');
         }
     });
-});
+
+    return channel;
+}
