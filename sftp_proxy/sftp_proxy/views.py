@@ -11,11 +11,14 @@ from paramiko.ssh_exception import SSHException
 from paramiko import SFTPError
 
 from . import sftp
+from .sftp import SftpConnectionManager
 from .utils import session_key_required_in_cookie
 from .ws import update_transmission_progress
 
 
 # Create your views here.
+
+sftp_connections = SftpConnectionManager()
 
 
 class DashboardView(View):
@@ -24,7 +27,7 @@ class DashboardView(View):
         if not request.session.session_key:
             request.session.save()
             response = render(request, 'dashboard.html')
-            sftp.clean_sftp_connections()
+            sftp_connections.clean_sftp_connections()
             request.session.set_expiry(settings.SESSION_COOKIE_AGE)
             return response
         else:
@@ -50,7 +53,7 @@ class LoginView(View):
                 return JsonResponse(context)
             else:
 
-                sftp.add_sftp_connection(session_key, source, sftp_client, request.session.get_expiry_date())
+                sftp_connections.add_sftp_connection(session_key, source, sftp_client, request.session.get_expiry_date())
 
                 try:
                     content = sftp_client.listdir_iter()
@@ -77,7 +80,7 @@ class DisconnectSftpView(View):
         if request.is_ajax():
             source = request.GET["source"]
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-            sftp.remove_sftp_connection(source, session_key)
+            sftp_connections.remove_sftp_connection(source, session_key)
             return JsonResponse({"status": "success"})
         else:
             return HttpResponseNotAllowed()
@@ -94,7 +97,7 @@ class ListContentView(View):
             data_list = []
 
             if source == 'host1' or source == 'host2':
-                sftp_client = sftp.get_sftp_client(source, session_key)
+                sftp_client = sftp_connections.get_sftp_connection(source, session_key)
             else:
                 # Some exception
                 return HttpResponseBadRequest()
@@ -131,10 +134,10 @@ class TransferView(View):
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             request_data = json.loads(request.body.decode('utf-8'))
-            sftp_client_from = sftp.get_sftp_client(request_data['from']['name'], session_key)
+            sftp_client_from = sftp_connections.get_sftp_connection(request_data['from']['name'], session_key)
             from_path = request_data['from']['path']
 
-            sftp_client_to = sftp.get_sftp_client(request_data['to']['name'], session_key)
+            sftp_client_to = sftp_connections.get_sftp_connection(request_data['to']['name'], session_key)
             to_path = request_data['to']['path']
 
             try:
@@ -175,7 +178,7 @@ class DeleteView(View):
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             request_data = json.loads(request.body.decode('utf-8'))
-            sftp_client = sftp.get_sftp_client(request_data['source'], session_key)
+            sftp_client = sftp_connections.get_sftp_connection(request_data['source'], session_key)
             path = request_data['path']
 
             try:

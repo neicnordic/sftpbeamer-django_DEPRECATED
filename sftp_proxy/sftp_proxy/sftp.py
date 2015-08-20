@@ -11,36 +11,36 @@ from paramiko.transport import Transport
 from .ws import update_transmission_progress
 
 
+class SftpConnectionManager:
 
-# the structure of this dictionary is
-# {"session_key": {"host1": sftp_connection, "host2": sftp_connection, "expiry_time": time}}
-SFTP_CONNECTIONS = {}
+    def __init__(self):
+        """
+        the structure of this dictionary is
+        {"session_key": {"host1": sftp_connection, "host2": sftp_connection, "expiry_time": time}}
+        """
+        self.connections = {}
 
+    def add_sftp_connection(self, session_key, source, sftp_client, expiry_time):
+        if session_key in self.connections:
+            self.connections[session_key][source] = sftp_client
+        else:
+            self.connections[session_key] = {source: sftp_client, 'expiry_time': expiry_time}
 
-def add_sftp_connection(session_key, source, sftp_client, expiry_time):
-    if session_key in SFTP_CONNECTIONS:
-        SFTP_CONNECTIONS[session_key][source] = sftp_client
-    else:
-        SFTP_CONNECTIONS[session_key] = {source: sftp_client, 'expiry_time': expiry_time}
+    def clean_sftp_connections(self):
+        for key in list(iter(self.connections)):
+            if 'expiry_time' in self.connections[key]:
+                if now() > self.connections[key]['expiry_time']:
+                    del self.connections[key]
 
+    def get_sftp_connection(self, source, session_key):
+        return self.connections[session_key][source]
 
-def clean_sftp_connections():
-    for key in list(iter(SFTP_CONNECTIONS)):
-        if 'expiry_time' in SFTP_CONNECTIONS[key]:
-            if now() > SFTP_CONNECTIONS[key]['expiry_time']:
-                del SFTP_CONNECTIONS[key]
-
-
-def get_sftp_client(source, session_key):
-    return SFTP_CONNECTIONS[session_key][source]
-
-
-def remove_sftp_connection(source, session_key):
-    if session_key in SFTP_CONNECTIONS:
-        if source in SFTP_CONNECTIONS[session_key]:
-            del SFTP_CONNECTIONS[session_key][source]
-            if len(SFTP_CONNECTIONS[session_key].keys()) == 1:
-                del SFTP_CONNECTIONS[session_key]
+    def remove_sftp_connection(self, source, session_key):
+        if session_key in self.connections:
+            if source in self.connections[session_key]:
+                del self.connections[session_key][source]
+                if len(self.connections[session_key].keys()) == 1:
+                    del self.connections[session_key]
 
 
 def create_sftp_client(user_name, password, otc, hostname, port):
