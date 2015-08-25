@@ -8,8 +8,10 @@ function create_ws_channel() {
 // Receive the path for the connection from the django template context:
     // This is for local testing
     var endpoint = 'ws://localhost:4242/ec';
-    // This is for tryggve testing server
-    // var endpoint = 'ws://129.177.16.254:80/websocket';
+    // This is for testing server without ssl
+    // var endpoint = 'ws://tryggve.cbu.uib.no:80/websocket';
+    //This is for testing server with ssl
+    //var endpoint = 'wss://tryggve.cbu.uib.no:443/websocket';
 
 // Create a new connection using transport, endpoint and options
     var connection = new Omnibus(transport, endpoint);
