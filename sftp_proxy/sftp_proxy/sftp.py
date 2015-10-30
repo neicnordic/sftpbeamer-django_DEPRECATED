@@ -4,6 +4,7 @@ __date__ = '09/Jun/2015'
 
 import stat
 from os import sep
+from datetime import datetime
 
 from django.utils.timezone import now
 from paramiko.transport import Transport
@@ -12,7 +13,6 @@ from .ws import update_transmission_progress
 
 
 class SftpConnectionManager:
-
     def __init__(self):
         """
         the structure of this dictionary is
@@ -29,41 +29,47 @@ class SftpConnectionManager:
     def clean_sftp_connections(self):
         for key in list(iter(self.connections)):
             if 'expiry_time' in self.connections[key]:
-                if now() > self.connections[key]['expiry_time']:
+                if datetime.now() > self.connections[key]['expiry_time']:
+                    if 'host1' in self.connections[key]:
+                        self.connections[key]['host1'].close()
+                    if 'host2' in self.connections[key]:
+                        self.connections[key]['host2'].close()
                     del self.connections[key]
 
-    def get_sftp_connection(self, source, session_key):
-        return self.connections[session_key][source]
+    def open_sftp_client(self, source, session_key):
+        return self.connections[session_key][source].open_sftp_client()
 
     def remove_sftp_connection(self, source, session_key):
         if session_key in self.connections:
             if source in self.connections[session_key]:
+                self.connections[session_key][source].close()
                 del self.connections[session_key][source]
                 if len(self.connections[session_key].keys()) == 1:
                     del self.connections[session_key]
 
+    @staticmethod
+    def authenticate_sftp_user(user_name, password, otc, hostname, port):
 
-def create_sftp_client(user_name, password, otc, hostname, port):
-    def sftp_auth_handler(title, instructions, prompt_list):
-        if len(prompt_list) == 0:
-            return []
-        if 'Password' in prompt_list[0][0]:
-            return [password]
+        def sftp_auth_handler(title, instructions, prompt_list):
+            if len(prompt_list) == 0:
+                return []
+            if 'Password' in prompt_list[0][0]:
+                return [password]
+            else:
+                return [otc]
+
+        transport = Transport((hostname, int(port)))
+
+        if otc != '':
+            transport.start_client()
+            transport.auth_interactive(user_name, sftp_auth_handler)
         else:
-            return [otc]
+            transport.connect(None, user_name, password)
 
-    transport = Transport((hostname, int(port)))
-
-    if otc != '':
-        transport.start_client()
-        transport.auth_interactive(user_name, sftp_auth_handler)
-    else:
-        transport.connect(None, user_name, password)
-
-    return transport.open_sftp_client()
+        return transport
 
 
-def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_client_to):
+def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_client_to, channel_name):
     sftp_client_to.chdir(to_path)
     sftp_client_to.mkdir(folder_name)
     sftp_client_to.chdir(to_path + sep + folder_name)
@@ -74,11 +80,12 @@ def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_clie
     content = sftp_client_from.listdir_attr(from_cwd)
     for file_attr in content:
         if stat.S_ISDIR(file_attr.st_mode):
-            transfer_folder(file_attr.filename, from_cwd, sftp_client_from, to_cwd, sftp_client_to)
+            transfer_folder(file_attr.filename, from_cwd, sftp_client_from, to_cwd, sftp_client_to, channel_name)
         else:
             sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
                                    sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'),
-                                   lambda transferred_bytes, total_bytes: update_transmission_progress(transferred_bytes, total_bytes, file_name=file_attr.filename))
+                                   lambda transferred_bytes, total_bytes: update_transmission_progress(
+                                       channel_name, transferred_bytes, total_bytes, file_name=file_attr.filename))
 
 
 def delete_folder(folder_name, path, sftp_client):

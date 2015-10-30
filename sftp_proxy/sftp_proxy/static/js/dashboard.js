@@ -202,7 +202,7 @@ $(document).ready(function() {
             var to_path = extractPath($('.host1-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
-            var ws_channel = create_ws_channel();
+            create_ws_channel(getCookie('host2'));
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -218,7 +218,6 @@ $(document).ready(function() {
                     }
                 },
                 success: function (returnedData) {
-                    ws_channel.close();
                     if (returnedData["error"]) {
                         change_modal_property("Error", returnedData["error"]);
                         var modal = $('#info_modal');
@@ -236,14 +235,14 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
-                        $.ajax({
-                            type: "GET",
-                            url: url,
-                            success: function (updatedData) {
-                                reloadTableData(updatedData["data"], updatedData["path"], "host1");
-                            }
-                        });
+                        //var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
+                        //$.ajax({
+                        //    type: "GET",
+                        //    url: url,
+                        //    success: function (updatedData) {
+                        //        reloadTableData(updatedData["data"], updatedData["path"], "host1");
+                        //    }
+                        //});
                     }
                 }
             });
@@ -330,7 +329,7 @@ $(document).ready(function() {
             var to_path = extractPath($('.host2-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
-            var ws_channel = create_ws_channel();
+            create_ws_channel(getCookie('host1'));
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -346,7 +345,6 @@ $(document).ready(function() {
                     }
                 },
                 success: function (returnedData) {
-                    ws_channel.close();
                     if (returnedData["error"]) {
                         change_modal_property("Error", returnedData["error"]);
                         var modal = $('#info_modal');
@@ -364,14 +362,14 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
-                        $.ajax({
-                            type: "GET",
-                            url: url,
-                            success: function (updatedData) {
-                                reloadTableData(updatedData["data"], updatedData["path"], "host1");
-                            }
-                        });
+                        //var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
+                        //$.ajax({
+                        //    type: "GET",
+                        //    url: url,
+                        //    success: function (updatedData) {
+                        //        reloadTableData(updatedData["data"], updatedData["path"], "host2");
+                        //    }
+                        //});
                     }
                 }
             });

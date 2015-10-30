@@ -5,10 +5,10 @@ __date__ = '14/Jul/2015'
 from omnibus.api import publish
 
 
-def update_transmission_progress(transferred_bytes, total_bytes, file_name=''):
+def update_transmission_progress(channel_name, transferred_bytes, total_bytes, file_name=''):
     publish(
         # the name of the channel
-        'progress',
+        channel_name,
         # the `type` of the message/event, clients use this name to register event handlers
         'update',
         # payload of the event, needs to be a dict which is JSON dumpable.
@@ -16,3 +16,4 @@ def update_transmission_progress(transferred_bytes, total_bytes, file_name=''):
         # sender id of the event, can be None.
         sender='server'
     )
+

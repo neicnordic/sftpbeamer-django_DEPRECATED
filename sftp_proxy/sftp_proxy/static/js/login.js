@@ -19,19 +19,19 @@ $(document).ready(function() {
                 '<input type="password" class="form-control" id="password" placeholder="Password"> ' +
                 '</div> <div class="form-group"> <label for="otc" class="sr-only">One-time Code</label> ' +
                 '<input type="text" class="form-control" id="otc" placeholder="One-time Code"/> </div>');
-            $('#credential_modal').modal({
-                keyboard: false,
-                backdrop: 'static'
-            });
         } else if (hostname == 'host2.example.org') {
             $('#credential_modal .modal-body').html('<div class="form-group"> ' +
                 '<label for="password" class="sr-only">Password</label> ' +
                 '<input type="password" class="form-control" id="password" placeholder="Password"></div>');
-            $('#credential_modal').modal({
+        } else {
+            $('#credential_modal .modal-body').html('<div class="form-group"> ' +
+                '<label for="password" class="sr-only">Password</label> ' +
+                '<input type="password" class="form-control" id="password" placeholder="Password"></div>');
+        }
+        $('#credential_modal').modal({
                 keyboard: false,
                 backdrop: 'static'
             });
-        } else {}
     });
 
     $('#credential_submit').click(function(){
@@ -65,7 +65,7 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_proxy/dashboard/list?path=/&source=host1">/</a>');
+                        $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_proxy/dashboard/list?path=/&source=' + target + '">/</a>');
                         $("#" + target + "-table-div").html('<table id="' + target + '-table" class="table table-striped"></table>');
                         createTable(target, returnedData["data"]);
                         $("#" + target + "-delete-btn").prop("disabled", false);

@@ -83,7 +83,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-function create_ws_channel() {
+function create_ws_channel(channelName) {
     var transport = WebSocket;
 
 // Receive the path for the connection from the django template context:
@@ -96,7 +96,8 @@ function create_ws_channel() {
 
 // Create a new connection using transport, endpoint and options
     var connection = new Omnibus(transport, endpoint);
-    var channel = connection.openChannel('progress');
+    var channel = connection.openChannel(channelName);
+
 
 
     var transferred_file_name = $('#transferred-file-name');
@@ -114,8 +115,6 @@ function create_ws_channel() {
             progress_bar.css("width", percentage + '%');
         }
     });
-
-    return channel;
 }
 
 function change_modal_property(modal_title, modal_content) {
