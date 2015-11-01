@@ -15,3 +15,15 @@
 .form-input {
 	margin: .4em .2em;
 }
+
+#waiting-box {
+    display: none;
+    text-align: center;
+}
+
+#gray-screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: #000;
+}

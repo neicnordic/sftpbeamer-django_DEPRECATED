@@ -83,6 +83,18 @@ function getCookie(name) {
     return cookieValue;
 }
 
+function enable_waiting_box(message) {
+    $('#gray-screen').css({opacity: 0.3, 'width': $(document).width(), 'height': $(document).height()});
+    $('body').css({'overflow': 'hidden'});
+    $('#waiting-box').css({'display': 'block'});
+    $('#waiting-box > p').text(message);
+}
+
+function disable_waiting_box() {
+    $('#gray-screen').css({'display': 'none'});
+    $('#waiting-box').css({'display': 'none'});
+}
+
 function create_ws_channel(channelName) {
     var transport = WebSocket;
 
