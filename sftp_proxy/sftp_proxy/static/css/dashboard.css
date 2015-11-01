@@ -15,3 +15,21 @@
 .form-input {
 	margin: .4em .2em;
 }
+
+#waiting-box {
+    display: none;
+    text-align: center;
+    z-index: 1000;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%,-50%, 0);
+}
+
+#gray-screen {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: #000;
+}

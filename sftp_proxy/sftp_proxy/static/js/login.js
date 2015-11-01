@@ -46,44 +46,61 @@ $(document).ready(function() {
         $.ajax({
             type: "POST",
             url: "/sftp_proxy/dashboard/login",
-            data: {"username": username, "password": password, "otc": otc, "hostname": hostname, "port": port, "source": target},
-            success: function(returnedData) {
-                    if (returnedData['exception']) {
-                        change_modal_property("Exception", returnedData["exception"]);
-                        $('#info_modal').modal({
-                            keyboard: false,
-                            backdrop: 'static'
-                        });
-                    } else if (returnedData["error"]) {
-                        change_modal_property("Error", returnedData["error"]);
-                        var modal = $('#info_modal');
-                        modal.one('hide.bs.modal', function (event) {
-                            location.reload();
-                        });
-                        modal.modal({
-                            keyboard: false,
-                            backdrop: 'static'
-                        });
-                    } else {
-                        $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_proxy/dashboard/list?path=/&source=' + target + '">/</a>');
-                        $("#" + target + "-table-div").html('<table id="' + target + '-table" class="table table-striped"></table>');
-                        createTable(target, returnedData["data"]);
-                        $("#" + target + "-delete-btn").prop("disabled", false);
-                        $("#" + target + "-transfer-btn").prop("disabled", false);
-                        $("#" + target + "-disconnect-btn").prop("disabled", false);
-                        $("#" + target + "-submit-btn").prop("disabled", true);
-                        $("#" + target + "-username").prop("disabled", true);
-                        $("#" + target + "-hostname").prop("disabled", true);
-                        $("#" + target + "-port").prop("disabled", true);
-                    }
-                },
-                dataType: "json",
-                contentType: 'application/x-www-form-urlencoded; charset=utf-8',
-                beforeSend: function(xhr) {
-                    if (!this.crossDomain) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
+            data: {
+                "username": username,
+                "password": password,
+                "otc": otc,
+                "hostname": hostname,
+                "port": port,
+                "source": target
+            },
+            error: function (jqXhR, textStatus, errorThrown) {
+                disable_waiting_box();
+                change_modal_property("Exception", errorThrown);
+                $('#info_modal').modal({
+                    keyboard: false,
+                    backdrop: 'static'
+                });
+            },
+            success: function (returnedData) {
+                disable_waiting_box();
+                if (returnedData['exception']) {
+                    change_modal_property("Exception", returnedData["exception"]);
+                    $('#info_modal').modal({
+                        keyboard: false,
+                        backdrop: 'static'
+                    });
+                } else if (returnedData["error"]) {
+                    change_modal_property("Error", returnedData["error"]);
+                    var modal = $('#info_modal');
+                    modal.one('hide.bs.modal', function (event) {
+                        location.reload();
+                    });
+                    modal.modal({
+                        keyboard: false,
+                        backdrop: 'static'
+                    });
+                } else {
+                    $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_proxy/dashboard/list?path=/&source=' + target + '">/</a>');
+                    $("#" + target + "-table-div").html('<table id="' + target + '-table" class="table table-striped"></table>');
+                    createTable(target, returnedData["data"]);
+                    $("#" + target + "-delete-btn").prop("disabled", false);
+                    $("#" + target + "-transfer-btn").prop("disabled", false);
+                    $("#" + target + "-disconnect-btn").prop("disabled", false);
+                    $("#" + target + "-submit-btn").prop("disabled", true);
+                    $("#" + target + "-username").prop("disabled", true);
+                    $("#" + target + "-hostname").prop("disabled", true);
+                    $("#" + target + "-port").prop("disabled", true);
                 }
+            },
+            dataType: "json",
+            contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+            beforeSend: function (xhr) {
+                if (!this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
         });
+        enable_waiting_box("Connecting");
     });
 });
