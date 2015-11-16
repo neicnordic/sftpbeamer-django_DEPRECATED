@@ -1,7 +1,8 @@
 import stat
 from os import sep
 from datetime import datetime
-from threading import Thread
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 import zmq
 from zmq.eventloop.ioloop import ZMQIOLoop
@@ -10,50 +11,41 @@ from tornado.ioloop import IOLoop
 from zmq.utils import jsonapi
 from paramiko.ssh_exception import SSHException
 from paramiko import SFTPError
-from django.core.management.base import NoArgsCommand
+from tornado.websocket import WebSocketHandler
+from tornado.web import Application, asynchronous
 
-from sftp_proxy.sftp import SftpConnectionManager, transfer_folder, delete_folder
+from sftp_proxy.sftp import SftpConnectionManager, delete_folder
 from sftp_proxy.constants import ZmqMessageKeys, ZmqMessageValues
-from sftp_proxy.ws import update_transmission_progress
 
 __author__ = 'Xiaxi Li'
 __email__ = 'xiaxi.li@ii.uib.no'
 __date__ = '17/Oct/2015'
 
+"""
+This is a second process, which is used for managing sftp connections. It contains two parts.
+One is the zmq, the other is the web socket handler.
+"""
 
-class Command(NoArgsCommand):
-    def handle_noargs(self, **options):
-        BackendProcess()
 
-
-class BackendProcess:
+class Zmq:
     """
-    This is a second process, which is used for managing the sftp connections. In order to run this process, run command
-    "python manage.py backend_process". There are two opening zmq sockets. One is for managing the synchronous tasks,
-    for example, connecting with sftp server, disconnecting with sftp server, listing content and so on. The other is
-    dedicated to file transfer.
+    This class is to manage the zmq's socket. There is one opening zmq socket,
+    which is for managing the synchronous tasks, for example, connecting with sftp server, disconnecting with sftp server,
+    listing content and so on.
     """
 
-    def __init__(self):
+    def __init__(self, sftp):
         loop = ZMQIOLoop.instance()
 
         ctx = zmq.Context.instance()
         sftp_connection_socket = ctx.socket(zmq.REP)
         sftp_connection_socket.bind("tcp://*:4444")
         self.sftp_connection_stream = ZMQStream(sftp_connection_socket, loop)
+        self.sftp_connection_stream.on_recv(self._sftp_connection_stream_receive_callback)
 
-        sftp_transfer_socket = ctx.socket(zmq.REP)
-        sftp_transfer_socket.bind("tcp://*:4445")
-        self.sftp_transfer_stream = ZMQStream(sftp_transfer_socket, loop)
+        self.sftp_connection_manager = sftp
 
-        self.sftp_connection_stream.on_recv(self.__sftp_connection_stream_receive_callback__)
-        self.sftp_transfer_stream.on_recv(self.__sftp_transfer_stream_receive_callback__)
-
-        self.sftp_connection_manager = SftpConnectionManager()
-
-        IOLoop.instance().start()
-
-    def __sftp_connection_stream_receive_callback__(self, msg):
+    def _sftp_connection_stream_receive_callback(self, msg):
         """
         This is the callback method when the sftp_connection_stream socket receives the message. Every message should
         include one field, which is called "action" representing the purpose of this request. At the end of this method,
@@ -122,42 +114,83 @@ class BackendProcess:
             else:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.SUCCESS.value})
 
-    def __sftp_transfer_stream_receive_callback__(self, msg):
+
+EXECUTOR = ThreadPoolExecutor(max_workers=100)
+
+
+class FileTransferWebSocket(WebSocketHandler):
+
+    def initialize(self, sftp):
+        self.sftp_connection_manager = sftp
+
+    def open(self):
+        print("WebSocket opened")
+
+    @asynchronous
+    def on_message(self, message):
+        data = jsonapi.loads(message)
+
+        def callback(future):
+            self.write_message("done")
+
+        EXECUTOR.submit(
+            partial(self._transfer_data, data)
+        ).add_done_callback(
+            lambda future: IOLoop.instance().add_callback(
+                partial(callback, future)))
+
+    def on_close(self):
+        print("WebSocket closed")
+
+    def _transfer_data(self, data):
         """
-        This is the callback method when the sftp_transfer_stream socket receives the message. At the end of this method,
-        self.sftp_transfer_stream.send_json method should be invoked.
-        :param msg: received message by sftp_transfer_stream. The structure of this message is {"from" :
-        {"path" : "the absolute path from which the transferred files come", "name" : "host1 or host2",
+        The structure of data is {"session_key" : "sessionid from cookie",
+        "from" : {"path" : "the absolute path from which the transferred files come", "name" : "host1 or host2",
         "data" : [{"name" : "file name or folder name", "type" : "file or folder"},
         {"name" : "file name or folder name", "type" : "file or folder"}]},
         "to" : {"path" : "the absolute path into which the transferred files will be put", "name" : "host1 or host2"}}
         """
-        request_data = jsonapi.loads(msg[0])
-        session_key = request_data[ZmqMessageKeys.SESSION_KEY.value]
-        sftp_client_from = self.sftp_connection_manager.open_sftp_client(request_data['from']['name'], session_key)
-        from_path = request_data['from']['path']
 
-        sftp_client_to = self.sftp_connection_manager.open_sftp_client(request_data['to']['name'], session_key)
-        to_path = request_data['to']['path']
+        session_key = data[ZmqMessageKeys.SESSION_KEY.value]
+        sftp_client_from = self.sftp_connection_manager.open_sftp_client(data['from']['name'], session_key)
+        from_path = data['from']['path']
 
-        # start a new thread, which is used to transfer files.
-        thread = Thread(target=BackendProcess.transfer_data,
-                        args=(sftp_client_from, from_path, request_data['from']['data'],
-                              sftp_client_to, to_path, request_data['from']['name'],))
-        thread.start()
-        self.sftp_transfer_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.STARTED.value})
+        sftp_client_to = self.sftp_connection_manager.open_sftp_client(data['to']['name'], session_key)
+        to_path = data['to']['path']
 
-    @staticmethod
-    def transfer_data(source_sftp, source_path, transferred_data, destination_sftp, destination_path, channel_name):
-
-        for item in transferred_data:
+        for item in data['from']['data']:
             if item['type'] == 'file':
-                source_sftp.getfo(source_path + sep + item['name'],
-                                  destination_sftp.open(destination_path + sep + item['name'], 'w'),
-                                  lambda transferred_bytes, total_bytes: update_transmission_progress(
-                                      channel_name, transferred_bytes, total_bytes, file_name=item['name']))
+                self._transfer_file(from_path, sftp_client_from, to_path, sftp_client_to, item['name'])
             else:
-                transfer_folder(item['name'], source_path, source_sftp, destination_path, destination_sftp, channel_name)
+                self._transfer_folder(item['name'], from_path, sftp_client_from, to_path, sftp_client_to)
+
+    def _transfer_folder(self, folder_name, from_path, sftp_client_from, to_path, sftp_client_to, callback=None):
+        sftp_client_to.chdir(to_path)
+        sftp_client_to.mkdir(folder_name)
+        sftp_client_to.chdir(to_path + sep + folder_name)
+        to_cwd = sftp_client_to.getcwd()
+
+        sftp_client_from.chdir(from_path + sep + folder_name)
+        from_cwd = sftp_client_from.getcwd()
+        content = sftp_client_from.listdir_attr(from_cwd)
+        for file_attr in content:
+            if stat.S_ISDIR(file_attr.st_mode):
+                self._transfer_folder(file_attr.filename, from_cwd, sftp_client_from, to_cwd, sftp_client_to)
+            else:
+                self._transfer_file(from_cwd, sftp_client_from, to_cwd, sftp_client_to, file_attr.filename)
+
+    def _transfer_file(self, from_path, sftp_client_from, to_path, sftp_client_to, file_name, callback=None):
+        sftp_client_from.getfo(from_path + sep + file_name,
+                               sftp_client_to.open(to_path + sep + file_name, 'w'),
+                               lambda transferred_bytes, total_bytes:
+                               self.write_message({"file_name": file_name,
+                                                   "transferred_bytes": transferred_bytes,
+                                                   "total_bytes": total_bytes}))
 
 
-
+if __name__ == "__main__":
+    sftp_connection_manager = SftpConnectionManager()
+    Zmq(sftp_connection_manager)
+    application = Application([(r"/ws", FileTransferWebSocket, dict(sftp=sftp_connection_manager)), ])
+    application.listen(4445)
+    IOLoop.current().start()

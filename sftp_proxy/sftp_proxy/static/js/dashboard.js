@@ -202,7 +202,6 @@ $(document).ready(function() {
             var to_path = extractPath($('.host1-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
-            create_ws_channel(getCookie('host2'));
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -235,14 +234,26 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        //var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host1";
-                        //$.ajax({
-                        //    type: "GET",
-                        //    url: url,
-                        //    success: function (updatedData) {
-                        //        reloadTableData(updatedData["data"], updatedData["path"], "host1");
-                        //    }
-                        //});
+                        var session_key = returnedData["session_key"];
+                        var ws = create_ws_connection();
+                        ws.onopen = function () {
+                            ws.send(JSON.stringify({
+                                "session_key": session_key,
+                                "from": {"path": from_path, "name": "host2", "data": transferredData},
+                                "to": {"path": to_path, "name": "host1"}}));
+                        };
+                        ws.onmessage = function (event) {
+                            if (event.data == "done") {
+                                change_modal_property("Information", "File transfer is done.");
+                                $('#info_modal').modal({
+                                    keyboard: false,
+                                    backdrop: 'static'
+                                });
+                                ws.close();
+                            } else {
+                                refresh_progress_bar(JSON.parse(event.data));
+                            }
+                        };
                     }
                 }
             });
@@ -329,7 +340,7 @@ $(document).ready(function() {
             var to_path = extractPath($('.host2-path-link:last').attr('href'));
             var csrftoken = getCookie('csrftoken');
 
-            create_ws_channel(getCookie('host1'));
+
             $.ajax({
                 type: "POST",
                 url: "/sftp_proxy/dashboard/transfer",
@@ -362,14 +373,26 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        //var url = "/sftp_proxy/dashboard/list?path=" + to_path + "&source=host2";
-                        //$.ajax({
-                        //    type: "GET",
-                        //    url: url,
-                        //    success: function (updatedData) {
-                        //        reloadTableData(updatedData["data"], updatedData["path"], "host2");
-                        //    }
-                        //});
+                        var session_key = returnedData["session_key"];
+                        var ws = create_ws_connection();
+                        ws.onopen = function () {
+                            ws.send(JSON.stringify({
+                                "session_key": session_key,
+                                "from": {"path": from_path, "name": "host1", "data": transferredData},
+                                "to": {"path": to_path, "name": "host2"}}));
+                        };
+                        ws.onmessage = function (event) {
+                            if (event.data == "done") {
+                                change_modal_property("Information", "File transfer is done.");
+                                $('#info_modal').modal({
+                                    keyboard: false,
+                                    backdrop: 'static'
+                                });
+                                ws.close();
+                            } else {
+                                refresh_progress_bar(JSON.parse(event.data));
+                            }
+                        };
                     }
                 }
             });

@@ -1,5 +1,4 @@
 import json
-from os import sep
 
 from django.views.generic import View
 from django.shortcuts import render
@@ -15,18 +14,11 @@ from .constants import ZmqMessageKeys, ZmqMessageValues, HttpParameters
 
 zmq_ctx = zmq.Context.instance()
 sftp_connection_socket_address = 'tcp://localhost:4444'
-sftp_transfer_socket_address = 'tcp://localhost:4445'
 
 
 def create_sftp_connection_socket():
     socket = zmq_ctx.socket(zmq.REQ)
     socket.connect(sftp_connection_socket_address)
-    return socket
-
-
-def create_sftp_transfer_socket():
-    socket = zmq_ctx.socket(zmq.REQ)
-    socket.connect(sftp_transfer_socket_address)
     return socket
 
 
@@ -156,14 +148,7 @@ class TransferView(View):
         """
         if request.is_ajax():
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-            request_data = json.loads(request.body.decode('utf-8'))
-
-            request_data[ZmqMessageKeys.SESSION_KEY.value] = session_key
-            socket = create_sftp_transfer_socket()
-            socket.send_json(request_data)
-            resp_msg = socket.recv_json()
-            socket.close()
-            return JsonResponse({"status": "started"})
+            return JsonResponse({"session_key": session_key})
         else:
             return HttpResponseNotAllowed()
 

@@ -1,18 +1,16 @@
-__author__ = 'Xiaxi Li'
-__email__ = 'xiaxi.li@ii.uib.no'
-__date__ = '09/Jun/2015'
-
 import stat
 from os import sep
 from datetime import datetime
 
-from django.utils.timezone import now
 from paramiko.transport import Transport
 
-from .ws import update_transmission_progress
+__author__ = 'Xiaxi Li'
+__email__ = 'xiaxi.li@ii.uib.no'
+__date__ = '09/Jun/2015'
 
 
 class SftpConnectionManager:
+
     def __init__(self):
         """
         the structure of this dictionary is
@@ -82,10 +80,12 @@ def transfer_folder(folder_name, from_path, sftp_client_from, to_path, sftp_clie
         if stat.S_ISDIR(file_attr.st_mode):
             transfer_folder(file_attr.filename, from_cwd, sftp_client_from, to_cwd, sftp_client_to, channel_name)
         else:
+            # sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
+            #                        sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'),
+            #                        lambda transferred_bytes, total_bytes: update_transmission_progress(
+            #                            channel_name, transferred_bytes, total_bytes, file_name=file_attr.filename))
             sftp_client_from.getfo(from_cwd + sep + file_attr.filename,
-                                   sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'),
-                                   lambda transferred_bytes, total_bytes: update_transmission_progress(
-                                       channel_name, transferred_bytes, total_bytes, file_name=file_attr.filename))
+                                   sftp_client_to.open(to_cwd + sep + file_attr.filename, 'w'))
 
 
 def delete_folder(folder_name, path, sftp_client):
