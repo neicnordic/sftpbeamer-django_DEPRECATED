@@ -3,6 +3,7 @@ from os import sep
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+from enum import Enum
 
 import zmq
 from zmq.eventloop.ioloop import ZMQIOLoop
@@ -11,11 +12,9 @@ from tornado.ioloop import IOLoop
 from zmq.utils import jsonapi
 from paramiko.ssh_exception import SSHException
 from paramiko import SFTPError
+from paramiko.transport import Transport
 from tornado.websocket import WebSocketHandler
 from tornado.web import Application, asynchronous
-
-from sftp_proxy.sftp import SftpConnectionManager, delete_folder
-from sftp_proxy.constants import ZmqMessageKeys, ZmqMessageValues
 
 __author__ = 'Xiaxi Li'
 __email__ = 'xiaxi.li@ii.uib.no'
@@ -25,6 +24,33 @@ __date__ = '17/Oct/2015'
 This is a second process, which is used for managing sftp connections. It contains two parts.
 One is the zmq, the other is the web socket handler.
 """
+
+
+class ZmqMessageValues(Enum):
+    CLEAN = 'clean'
+    SUCCESS = 'success'
+    FAIL = 'fail'
+    CONNECT = 'connect'
+    LIST = 'list'
+    DISCONNECT = 'disconnect'
+    STARTED = 'started'
+    DELETE = 'delete'
+
+
+class ZmqMessageKeys(Enum):
+    ACTION = 'action'
+    RESULT = 'result'
+    SESSION_KEY = 'session_key'
+    EXCEPTION = 'exception'
+    EXPIRY = 'expiry'
+    DATA = 'data'
+    USERNAME = 'username'
+    OTC = 'otc'
+    PASSWORD = 'password'
+    HOSTNAME = 'hostname'
+    PORT = 'port'
+    SOURCE = 'source'
+    PATH = 'path'
 
 
 class Zmq:
@@ -106,13 +132,22 @@ class Zmq:
                     if item['type'] == 'file':
                         sftp_client.remove(path + sep + item['name'])
                     else:
-                        delete_folder(item['name'], path, sftp_client)
+                        Zmq.delete_folder(item['name'], path, sftp_client)
             except PermissionError as error:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.EXCEPTION.value: error.strerror})
             except SFTPError as error:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.EXCEPTION.value: error.args[0]})
             else:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.SUCCESS.value})
+
+    @staticmethod
+    def delete_folder(folder_name, path, sftp_client):
+        for file_attr in sftp_client.listdir_attr(path + sep + folder_name):
+            if stat.S_ISDIR(file_attr.st_mode):
+                Zmq.delete_folder(file_attr.filename, path + sep + folder_name, sftp_client)
+            else:
+                sftp_client.remove(path + sep + folder_name + sep + file_attr.filename)
+        sftp_client.rmdir(path + sep + folder_name)
 
 
 EXECUTOR = ThreadPoolExecutor(max_workers=100)
@@ -186,6 +221,64 @@ class FileTransferWebSocket(WebSocketHandler):
                                self.write_message({"file_name": file_name,
                                                    "transferred_bytes": transferred_bytes,
                                                    "total_bytes": total_bytes}))
+
+
+class SftpConnectionManager:
+
+    def __init__(self):
+        """
+        the structure of this dictionary is
+        {"session_key": {"host1": sftp_connection, "host2": sftp_connection, "expiry_time": time}}
+        """
+        self.connections = {}
+
+    def add_sftp_connection(self, session_key, source, sftp_client, expiry_time):
+        if session_key in self.connections:
+            self.connections[session_key][source] = sftp_client
+        else:
+            self.connections[session_key] = {source: sftp_client, 'expiry_time': expiry_time}
+
+    def clean_sftp_connections(self):
+        for key in list(iter(self.connections)):
+            if 'expiry_time' in self.connections[key]:
+                if datetime.now() > self.connections[key]['expiry_time']:
+                    if 'host1' in self.connections[key]:
+                        self.connections[key]['host1'].close()
+                    if 'host2' in self.connections[key]:
+                        self.connections[key]['host2'].close()
+                    del self.connections[key]
+
+    def open_sftp_client(self, source, session_key):
+        return self.connections[session_key][source].open_sftp_client()
+
+    def remove_sftp_connection(self, source, session_key):
+        if session_key in self.connections:
+            if source in self.connections[session_key]:
+                self.connections[session_key][source].close()
+                del self.connections[session_key][source]
+                if len(self.connections[session_key].keys()) == 1:
+                    del self.connections[session_key]
+
+    @staticmethod
+    def authenticate_sftp_user(user_name, password, otc, hostname, port):
+
+        def sftp_auth_handler(title, instructions, prompt_list):
+            if len(prompt_list) == 0:
+                return []
+            if 'Password' in prompt_list[0][0]:
+                return [password]
+            else:
+                return [otc]
+
+        transport = Transport((hostname, int(port)))
+
+        if otc != '':
+            transport.start_client()
+            transport.auth_interactive(user_name, sftp_auth_handler)
+        else:
+            transport.connect(None, user_name, password)
+
+        return transport
 
 
 if __name__ == "__main__":

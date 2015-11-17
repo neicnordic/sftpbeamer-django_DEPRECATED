@@ -8,7 +8,8 @@ from django.http import HttpResponseBadRequest, JsonResponse, HttpResponseNotAll
 import zmq
 
 from .utils import session_key_required_in_cookie
-from .constants import ZmqMessageKeys, ZmqMessageValues, HttpParameters
+from .constants import HttpParameters
+from .backend_process import ZmqMessageKeys, ZmqMessageValues
 
 # Create your views here.
 
