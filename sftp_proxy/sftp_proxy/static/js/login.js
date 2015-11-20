@@ -7,22 +7,37 @@ $(document).ready(function() {
     var hostname;
     var port;
 
+    // Read host-specific configuration info from file.
+    // To create thsi file, to create this file, copy from /static/js/hostinfo.json.template
+    // to /static/js/hostinfo.json, and replace the capitalized values with the appropriate info.
+    var hostinfourl = '/static/js/hostinfo.json';
+    var hostinfo = [];
+    $.ajax({
+          type: 'GET',
+          url: hostinfourl,
+          dataType: 'json',
+          success: function(data) { hostinfo = data;},
+          async: false
+    });
+
+    // Populate the hostname inputs with values from config file
+    $('#host1-hostname').val(hostinfo.hosts['host1']);
+    $('#host2-hostname').val(hostinfo.hosts['host2']);
+
+    // Define button click action
     $('.btn-connect').click(function(event) {
         event.preventDefault();
         target = $(this).attr('data-target');
         username = $('#' + target + '-username').val();
         hostname = $('#' + target + '-hostname').val();
         port = $('#' + target + '-port').val();
-        if (hostname == 'host1.example.org') {
+
+        if (hostinfo.loginmodes[hostname] == 'otp') {
             $('#credential_modal .modal-body').html('<div class="form-group"> ' +
                 '<label for="password" class="sr-only">Password</label> ' +
                 '<input type="password" class="form-control" id="password" placeholder="Password"> ' +
                 '</div> <div class="form-group"> <label for="otc" class="sr-only">One-time Code</label> ' +
                 '<input type="text" class="form-control" id="otc" placeholder="One-time Code"/> </div>');
-        } else if (hostname == 'host2.example.org') {
-            $('#credential_modal .modal-body').html('<div class="form-group"> ' +
-                '<label for="password" class="sr-only">Password</label> ' +
-                '<input type="password" class="form-control" id="password" placeholder="Password"></div>');
         } else {
             $('#credential_modal .modal-body').html('<div class="form-group"> ' +
                 '<label for="password" class="sr-only">Password</label> ' +
@@ -37,7 +52,7 @@ $(document).ready(function() {
     $('#credential_submit').click(function(){
         var password;
         var otc = '';
-        if (hostname == 'host1.example.org') {
+        if (hostinfo.loginmodes[hostname] == 'otp') {
             otc = $('#otc').val();
         }
         password = $('#password').val();
