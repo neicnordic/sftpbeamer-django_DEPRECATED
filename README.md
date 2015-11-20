@@ -4,6 +4,10 @@ SFTP Beamer
 SFTP Beamer is an open source Web server for transferring ("beaming") over files between
 two SFTP servers, some times referred to as "Managed File Transfer" or "MFT".
 
+**Note:** SFTP Beamer is still in development. The basic functionality is there
+and works, but it is still a bit rough around the edges, and we are currently
+working on improving stability and security.
+
 SFTP Beamer is built on [Python](https://www.python.org/) 3,
 [Django](https://www.djangoproject.com/) 1.8.3, [JQuery](https://jquery.com/),
 [Bootstrap](http://getbootstrap.com/), and a bunch of other libraries.
