@@ -66,7 +66,7 @@ Start the background process:
 python sftp_beamer/sftp_beamer/backend_process.py
 ```
 
-Start the (front-end) web server:
+Start (in a separate terminal window) the (front-end) web server:
 ```
 python sftp_beamer/manage.py runserver
 ```
