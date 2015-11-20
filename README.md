@@ -72,7 +72,8 @@ python sftp_beamer/manage.py runserver
 ```
 
 Navigate to the SFTP Beamer dashboard:
-- http://localhost:8000/sftp_beamer/dashboard
+
+- [localhost:8000/sftp_beamer/dashboard](http://localhost:8000/sftp_beamer/dashboard)
 
 Copyright
 -------
