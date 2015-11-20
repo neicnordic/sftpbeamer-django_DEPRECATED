@@ -8,6 +8,12 @@ SFTP Beamer is built on [Python](https://www.python.org/) 3,
 [Django](https://www.djangoproject.com/) 1.8.3, [JQuery](https://jquery.com/),
 [Bootstrap](http://getbootstrap.com/), and a bunch of other libraries.
 
+Screenshot
+----------
+![Screenshot of the SFTP beamer dashboard, logged in to two servers](http://i.imgur.com/7TJdZwa.png)
+
+A Screenshot of the SFTP beamer dashboard, logged in to two servers.
+
 Getting started
 ---------------
 
