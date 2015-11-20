@@ -6,7 +6,8 @@ two SFTP servers, some times referred to as "Managed File Transfer" or "MFT".
 
 **Note:** SFTP Beamer is still in development. The basic functionality is there
 and works, but it is still a bit rough around the edges, and we are currently
-working on improving stability and security.
+working on improving stability and security. Contributions and issue reports
+are very welcome!
 
 SFTP Beamer is built on [Python](https://www.python.org/) 3,
 [Django](https://www.djangoproject.com/) 1.8.3, [JQuery](https://jquery.com/),
