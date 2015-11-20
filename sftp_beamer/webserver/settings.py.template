@@ -17,7 +17,7 @@ from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-STATIC_ROOT = os.path.join(BASE_DIR, "sftp_proxy/static/")
+STATIC_ROOT = os.path.join(BASE_DIR, "sftp_beamer/static/")
 
 
 # Quick-start development settings - unsuitable for production
@@ -50,7 +50,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'sftp_proxy'
+    'sftp_beamer'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -117,7 +117,7 @@ LOGGING = {
 	'applogfile': {
             'level':'DEBUG',
             'class':'logging.handlers.RotatingFileHandler',
-            'filename': 'sftp_proxy.log',
+            'filename': 'sftp_beamer.log',
             'maxBytes': 1024*1024*15, # 15MB
             'backupCount': 10,
         },
@@ -128,7 +128,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-	'sftp_proxy': {
+	'sftp_beamer': {
             'handlers': ['applogfile',],
             'level': 'DEBUG',
         },

@@ -3,7 +3,7 @@ __email__ = 'xiaxi.li@ii.uib.no'
 __date__ = '05/Jun/2015'
 
 from django.conf.urls import url
-from sftp_proxy.views import DashboardView, LoginView, ListContentView, TransferView, DeleteView, DisconnectSftpView
+from sftp_beamer.views import DashboardView, LoginView, ListContentView, TransferView, DeleteView, DisconnectSftpView
 
 
 urlpatterns = [

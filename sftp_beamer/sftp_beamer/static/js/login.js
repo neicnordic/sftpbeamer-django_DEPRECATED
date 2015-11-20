@@ -60,7 +60,7 @@ $(document).ready(function() {
         var csrftoken = getCookie('csrftoken');
         $.ajax({
             type: "POST",
-            url: "/sftp_proxy/dashboard/login",
+            url: "/sftp_beamer/dashboard/login",
             data: {
                 "username": username,
                 "password": password,
@@ -96,7 +96,7 @@ $(document).ready(function() {
                         backdrop: 'static'
                     });
                 } else {
-                    $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_proxy/dashboard/list?path=/&source=' + target + '">/</a>');
+                    $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_beamer/dashboard/list?path=/&source=' + target + '">/</a>');
                     $("#" + target + "-table-div").html('<table id="' + target + '-table" class="table table-striped"></table>');
                     createTable(target, returnedData["data"]);
                     $("#" + target + "-delete-btn").prop("disabled", false);

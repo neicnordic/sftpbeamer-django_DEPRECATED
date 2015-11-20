@@ -37,7 +37,7 @@ $(document).ready(function() {
                     });
                 } else {
                     var path = returnedData["path"];
-                    $("#host1-path").append('<a class="host1-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=host1">' + folder_name + '/</a>');
+                    $("#host1-path").append('<a class="host1-path-link" href="/sftp_beamer/dashboard/list?path=' + path + '&source=host1">' + folder_name + '/</a>');
                     reloadTableData(returnedData["data"], path, "host1");
                 }
             }
@@ -85,7 +85,7 @@ $(document).ready(function() {
         if (source == 'host1' || source == 'host2') {
             $.ajax({
                 type: "GET",
-                url: "/sftp_proxy/dashboard/disconnect?source=" + source,
+                url: "/sftp_beamer/dashboard/disconnect?source=" + source,
                 success: function () {
                     fetch_table(source).api().destroy();
                     $("#" + source + "-table").empty();
@@ -139,7 +139,7 @@ $(document).ready(function() {
                     });
                 } else {
                     var path = returnedData["path"];
-                    $("#host2-path").append('<a class="host2-path-link" href="/sftp_proxy/dashboard/list?path=' + path + '&source=host2">' + folder_name + '/</a>');
+                    $("#host2-path").append('<a class="host2-path-link" href="/sftp_beamer/dashboard/list?path=' + path + '&source=host2">' + folder_name + '/</a>');
                     reloadTableData(returnedData["data"], path, "host2");
                 }
             }
@@ -204,7 +204,7 @@ $(document).ready(function() {
 
             $.ajax({
                 type: "POST",
-                url: "/sftp_proxy/dashboard/transfer",
+                url: "/sftp_beamer/dashboard/transfer",
                 data: JSON.stringify({
                     "from": {"path": from_path, "name": "host2", "data": transferredData},
                     "to": {"path": to_path, "name": "host1"}
@@ -280,7 +280,7 @@ $(document).ready(function() {
 
             $.ajax({
                 type: "POST",
-                url: "/sftp_proxy/dashboard/delete",
+                url: "/sftp_beamer/dashboard/delete",
                 data: JSON.stringify({"source": "host2", "path": path, "data": transferredData}),
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
@@ -307,7 +307,7 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host2";
+                        var url = "/sftp_beamer/dashboard/list?path=" + path + "&source=host2";
                         $.ajax({
                             type: "GET",
                             url: url,
@@ -343,7 +343,7 @@ $(document).ready(function() {
 
             $.ajax({
                 type: "POST",
-                url: "/sftp_proxy/dashboard/transfer",
+                url: "/sftp_beamer/dashboard/transfer",
                 data: JSON.stringify({
                     "from": {"path": from_path, "name": "host1", "data": transferredData},
                     "to": {"path": to_path, "name": "host2"}
@@ -419,7 +419,7 @@ $(document).ready(function() {
 
             $.ajax({
                 type: "POST",
-                url: "/sftp_proxy/dashboard/delete",
+                url: "/sftp_beamer/dashboard/delete",
                 data: JSON.stringify({"source": "host1", "path": path, "data": transferredData}),
                 dataType: "json",
                 contentType: 'application/json; charset=utf-8',
@@ -446,7 +446,7 @@ $(document).ready(function() {
                             backdrop: 'static'
                         });
                     } else {
-                        var url = "/sftp_proxy/dashboard/list?path=" + path + "&source=host1";
+                        var url = "/sftp_beamer/dashboard/list?path=" + path + "&source=host1";
                         $.ajax({
                             type: "GET",
                             url: url,
@@ -488,9 +488,9 @@ $(document).ready(function() {
                     var isFoler = full[2];
                     if (isFoler == "folder") {
                         if (path == "/") {
-                            return '<i class="fa fa-folder-o"></i> <a class="' + source + '-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + data + '&source=' + source + '">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="' + source + '-folder-link" href="/sftp_beamer/dashboard/list?path=' + path + data + '&source=' + source + '">' + data + '</a>';
                         } else {
-                            return '<i class="fa fa-folder-o"></i> <a class="' + source + '-folder-link" href="/sftp_proxy/dashboard/list?path=' + path + '/' + data + '&source=' + source + '">' + data + '</a>';
+                            return '<i class="fa fa-folder-o"></i> <a class="' + source + '-folder-link" href="/sftp_beamer/dashboard/list?path=' + path + '/' + data + '&source=' + source + '">' + data + '</a>';
                         }
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;

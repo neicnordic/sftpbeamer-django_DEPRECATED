@@ -18,5 +18,5 @@ from django.conf.urls import include, url
 
 urlpatterns = [
     # url(r'^admin/', include(admin.site.urls)),
-    url(r'^sftp_proxy/', include('sftp_proxy.urls'))
+    url(r'^sftp_beamer/', include('sftp_beamer.urls'))
 ]
