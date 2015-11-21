@@ -54,9 +54,12 @@ a:visited {
     color: white!important;
     border-radius: 0;
 }
+.panel {
+    border-radius: 0!important;
+}
 .panel-info {
     background: #efefef!important;
-    border: 4px solid black!important;
+    border: 8px solid black!important;
     border-radius: 0;
 }
 .panel-title {
@@ -64,10 +67,28 @@ a:visited {
 	font-weight: bold;
 }
 .panel-info.host1 {
-    border-width: 4px 2px 4px 4px!important;
+    border-width: 4px 2px 2px 4px!important;
 }
 .panel-info.host2 {
-    border-width: 4px 4px 4px 2px!important;
+    border-width: 4px 4px 2px 2px!important;
+}
+.panel-default > .panel-footer {
+	border: 4px solid black;
+    border-width: 2px 4px 4px 4px;
+	height: 56px!important;
+	padding: 1em;
+}
+.progress {
+	width: 100%;
+}
+@media screen and (max-width: 991px) {
+    .panel-info.host1,
+    .panel-info.host2 {
+        border-width: 4px 4px 2px 4px!important;
+    }
+    .panel-default > .panel-footer {
+        border-width: 2px 4px 4px 4px!important;
+    }
 }
 .panel-heading {
     background: black!important;
@@ -91,14 +112,8 @@ input.form-input {
 .dataTables_length {
     margin-left: .6em;
 }
-.panel-default > .panel-footer {
-	margin-bottom: 1em;
-	border: 4px solid black;
-	height: 56px!important;
-	padding: 1em;
-}
-.progress {
-	width: 100%;
+.panel {
+    margin: 0;
 }
 .paginate_button:hover {
     background: #6944D0!important;
@@ -110,12 +125,15 @@ input.form-input {
     padding: 0;
 }
 .panel-default >.panel-body {
-    margin: -1em;
+    margin: -1.1em;
 }
 
 .modal-content {
     border-radius: 0;
 }
-.modal-content input#password {
-    border-radius: 0;
+.modal-content input {
+    border-radius: 0!important;
+}
+.form-control:focus {
+    border-color: #6944D0;
 }
