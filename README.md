@@ -15,7 +15,7 @@ SFTP Beamer is built on [Python](https://www.python.org/) 3,
 
 Screenshot
 ----------
-![Screenshot of the SFTP beamer dashboard, logged in to two servers](http://i.imgur.com/7TJdZwa.png)
+![Screenshot of the SFTP beamer dashboard, logged in to two servers](http://i.imgur.com/5q2nUSk.png)
 
 A Screenshot of the SFTP beamer dashboard, logged in to two servers.
 
