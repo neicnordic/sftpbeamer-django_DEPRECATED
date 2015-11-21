@@ -95,7 +95,7 @@ class DisconnectSftpView(View):
             socket = create_sftp_connection_socket()
             socket.send_json({ZmqMessageKeys.ACTION.value: ZmqMessageValues.DISCONNECT.value,
                               ZmqMessageKeys.SOURCE.value: source,
-                              ZmqMessageKeys.SESSION_KEY: session_key})
+                              ZmqMessageKeys.SESSION_KEY.value: session_key})
             resp_msg = socket.recv_json()
             socket.close()
             if ZmqMessageKeys.RESULT.value in resp_msg \
