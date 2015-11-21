@@ -35,6 +35,14 @@
 /*
  * NeIC inspired styling
  */
+h1.site-title {
+    font-family: "arial black";
+    font-size: 28px;
+    margin: 0 .2em -0.5em 0;
+    color: #6944D0;
+    letter-spacing: -2px;
+     opacity: .37;
+}
 a,
 a:link,
 a:hover,
