@@ -96,7 +96,7 @@ $(document).ready(function() {
                         backdrop: 'static'
                     });
                 } else {
-                    $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_beamer/dashboard/list?path=/&source=' + target + '">/</a>');
+                    $("#" + target + "-path").append('<a class="' + target + '-path-link" href="/sftp_beamer/dashboard/list?path=/&source=' + target + '">&laquo;root&raquo;/</a>');
                     $("#" + target + "-table-div").html('<table id="' + target + '-table" class="table table-striped"></table>');
                     createTable(target, returnedData["data"]);
                     $("#" + target + "-delete-btn").prop("disabled", false);
