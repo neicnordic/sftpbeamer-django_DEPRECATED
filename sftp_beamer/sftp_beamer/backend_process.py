@@ -53,11 +53,12 @@ class ZmqMessageKeys(Enum):
     PATH = 'path'
 
 
-class Zmq:
+class ZmqSocketManager:
     """
-    This class is to manage the zmq's socket. There is one opening zmq socket,
-    which is for managing the synchronous tasks, for example, connecting with sftp server, disconnecting with sftp server,
-    listing content and so on.
+    This class manages the zmq socket. There is one opening zmq
+    socket, which is for managing the synchronous tasks, such as
+    connecting with the SFTP server, disconnecting, listing content
+    and so on.
     """
 
     def __init__(self, sftp):
@@ -149,7 +150,7 @@ class Zmq:
                     if item['type'] == 'file':
                         sftp_client.remove(path + sep + item['name'])
                     else:
-                        Zmq.delete_folder(item['name'], path, sftp_client)
+                        ZmqSocketManager.delete_folder(item['name'], path, sftp_client)
             except PermissionError as error:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.EXCEPTION.value: error.strerror})
             except SFTPError as error:
@@ -161,7 +162,7 @@ class Zmq:
     def delete_folder(folder_name, path, sftp_client):
         for file_attr in sftp_client.listdir_attr(path + sep + folder_name):
             if stat.S_ISDIR(file_attr.st_mode):
-                Zmq.delete_folder(file_attr.filename, path + sep + folder_name, sftp_client)
+                ZmqSocketManager.delete_folder(file_attr.filename, path + sep + folder_name, sftp_client)
             else:
                 sftp_client.remove(path + sep + folder_name + sep + file_attr.filename)
         sftp_client.rmdir(path + sep + folder_name)
@@ -300,7 +301,7 @@ class SftpConnectionManager:
 
 if __name__ == "__main__":
     sftp_connection_manager = SftpConnectionManager()
-    Zmq(sftp_connection_manager)
+    ZmqSocketManager(sftp_connection_manager)
     application = Application([(r"/ws", FileTransferWebSocket, dict(sftp=sftp_connection_manager)), ])
     application.listen(4445)
     IOLoop.current().start()
