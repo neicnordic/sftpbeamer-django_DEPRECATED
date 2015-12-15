@@ -107,10 +107,11 @@ class Zmq:
                 content = self.sftp_connection_manager.open_sftp_client(source, session_key).listdir_iter(path)
                 data_list = []
                 for file_attr in content:
-                    if stat.S_ISDIR(file_attr.st_mode):
-                        data_list.append([file_attr.filename, file_attr.st_size, "folder"])
-                    else:
-                        data_list.append([file_attr.filename, file_attr.st_size, "file"])
+                    if file_attr.filename[0:1] != '.': # Exclude hidden files (files starting with a dot)
+                        if stat.S_ISDIR(file_attr.st_mode):
+                            data_list.append([file_attr.filename, file_attr.st_size, "folder"])
+                        else:
+                            data_list.append([file_attr.filename, file_attr.st_size, "file"])
             except PermissionError as error:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.EXCEPTION.value: error.strerror})
             except SFTPError as error:
