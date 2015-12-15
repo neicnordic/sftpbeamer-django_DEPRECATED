@@ -44,9 +44,10 @@ class LoginView(View):
     @session_key_required_in_cookie
     def post(self, request):
         if request.is_ajax():
+            # Extract values from the ajax POST request
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
             user_name = request.POST[HttpParameters.USERNAME.value]
-            otc = request.POST[HttpParameters.OTC.value]
+            otc = request.POST[HttpParameters.OTC.value] # One-time code from 2-factor authentication
             password = request.POST[HttpParameters.PASSWORD.value]
             hostname = request.POST[HttpParameters.HOSTNAME.value]
             port = request.POST[HttpParameters.PORT.value]
@@ -64,9 +65,11 @@ class LoginView(View):
                               ZmqMessageKeys.SOURCE.value: source,
                               ZmqMessageKeys.EXPIRY.value: expiry_date.timestamp()})
             resp_msg = socket.recv_json()
+
             if ZmqMessageKeys.EXCEPTION.value in resp_msg:
                 socket.close()
                 return JsonResponse(resp_msg)
+
             if ZmqMessageKeys.RESULT.value in resp_msg \
                     and resp_msg[ZmqMessageKeys.RESULT.value] == ZmqMessageValues.SUCCESS.value:
                 socket.send_json({ZmqMessageKeys.ACTION.value: ZmqMessageValues.LIST.value,
@@ -74,12 +77,17 @@ class LoginView(View):
                                   ZmqMessageKeys.SOURCE.value: source})
                 resp_msg = socket.recv_json()
                 socket.close()
+
                 if ZmqMessageKeys.EXCEPTION.value in resp_msg:
+                    # Don't set cookie
                     return JsonResponse(resp_msg)
+
                 if ZmqMessageKeys.DATA.value in resp_msg:
+                    # Do set cookie
                     response = JsonResponse(resp_msg)
                     response.set_cookie(source, user_name)
                     return response
+
         else:
             return HttpResponseNotAllowed()
 
