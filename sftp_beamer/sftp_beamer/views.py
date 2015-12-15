@@ -13,12 +13,12 @@ from .backend_process import ZmqMessageKeys, ZmqMessageValues
 
 # Create your views here.
 
-zmq_ctx = zmq.Context.instance()
+zmq_context = zmq.Context.instance()
 sftp_connection_socket_address = 'tcp://localhost:4444'
 
 
 def create_sftp_connection_socket():
-    socket = zmq_ctx.socket(zmq.REQ)
+    socket = zmq_context.socket(zmq.REQ)
     socket.connect(sftp_connection_socket_address)
     return socket
 
