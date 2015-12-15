@@ -11,8 +11,8 @@ function createTable(name, content) {
             "dom": "tlp",
             "language": {
                 "paginate": {
-                    "next": "&gt;",
-                    "previous": "&lt;"
+                    "previous": "&laquo;",
+                    "next": "&raquo;"
                 }
             },
             "info": false,
