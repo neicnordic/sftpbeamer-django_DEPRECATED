@@ -79,9 +79,15 @@ class Zmq:
         :param msg: received message by sftp_connection_stream
         """
         resp_msg = jsonapi.loads(msg[0])
+        # ------------------------------------------------
+        # Clean connections action
+        # ------------------------------------------------
         if resp_msg[ZmqMessageKeys.ACTION.value] == ZmqMessageValues.CLEAN.value:
             self.sftp_connection_manager.clean_sftp_connections()
             self.sftp_connection_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.SUCCESS.value})
+        # ------------------------------------------------
+        # Login / Connect action
+        # ------------------------------------------------
         elif resp_msg[ZmqMessageKeys.ACTION.value] == ZmqMessageValues.CONNECT.value:
             session_key = resp_msg[ZmqMessageKeys.SESSION_KEY.value]
             user_name = resp_msg[ZmqMessageKeys.USERNAME.value]
@@ -99,7 +105,11 @@ class Zmq:
             else:
                 self.sftp_connection_manager.add_sftp_connection(session_key, source, transport, datetime.fromtimestamp(expiry))
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.SUCCESS.value})
+        # ------------------------------------------------
+        # File listing action
+        # ------------------------------------------------
         elif resp_msg[ZmqMessageKeys.ACTION.value] == ZmqMessageValues.LIST.value:
+            # Perform a file listing action here
             session_key = resp_msg[ZmqMessageKeys.SESSION_KEY.value]
             source = resp_msg[ZmqMessageKeys.SOURCE.value]
             path = resp_msg[ZmqMessageKeys.PATH.value] if ZmqMessageKeys.PATH.value in resp_msg else sep
@@ -118,11 +128,17 @@ class Zmq:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.EXCEPTION.value: error.args[0]})
             else:
                 self.sftp_connection_stream.send_json({ZmqMessageKeys.DATA.value: data_list})
+        # ------------------------------------------------
+        # Disconnect action
+        # ------------------------------------------------
         elif resp_msg[ZmqMessageKeys.ACTION.value] == ZmqMessageValues.DISCONNECT.value:
             session_key = resp_msg[ZmqMessageKeys.SESSION_KEY.value]
             source = resp_msg[ZmqMessageKeys.SOURCE.value]
             self.sftp_connection_manager.remove_sftp_connection(source, session_key)
             self.sftp_connection_stream.send_json({ZmqMessageKeys.RESULT.value: ZmqMessageValues.SUCCESS.value})
+        # ------------------------------------------------
+        # Delete (file or folder) action
+        # ------------------------------------------------
         elif resp_msg[ZmqMessageKeys.ACTION.value] == ZmqMessageValues.DELETE.value:
             session_key = resp_msg[ZmqMessageKeys.SESSION_KEY.value]
             source = resp_msg[ZmqMessageKeys.SOURCE.value]
