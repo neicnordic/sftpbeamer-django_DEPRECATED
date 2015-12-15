@@ -52,8 +52,8 @@ function createTable(name, content) {
             "columns": [{
                 "title": "Name",
                 "render": function (data, type, full, meta) {
-                    var isFoler = full[2];
-                    if (isFoler == "folder") {
+                    var isFolder = full[2];
+                    if (isFolder == "folder") {
                         return '<i class="fa fa-folder-o"></i> <a class="host2-folder-link" href="/sftp_beamer/dashboard/list?path=/' + data + '&source=host2"> ' + data + '</a>';
                     } else {
                         return '<i class="fa fa-file-o"></i> ' + data;
