@@ -95,6 +95,13 @@ USE_L10N = True
 
 USE_TZ = True
 
+# This is needed to run unit tests via `manage.py test`
+DATABASES = {
+    'default':{
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'sftpbeamer_db'
+        }
+    }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
