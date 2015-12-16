@@ -18,3 +18,8 @@ class DashboardViewTests(TestCase):
         request.session.save()
         response = self.view.get(request)
         self.assertEqual(response.status_code, 200)
+
+    # This currently would require to start backend_process.py
+    # or possibly mock it in some way, before implementing.
+    #def test_get_without_a_session(self):
+    #    pass
